@@ -1,6 +1,6 @@
 var valence = (function(){
 
-    var href = $('script[src*="courses.byui.edu"]').attr('src'); // get this file name
+    var href = $('script[src*="&d2lddc=true"]').attr('src'); // get this file name
     var props = {};
 
     if (href.indexOf('?') > 0){
