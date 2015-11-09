@@ -46,46 +46,71 @@ function Topic(obj){
 	})(obj);
 
 	this._id = obj.Id;
+    this.changesMade = false;
+
+    /**
+     * Dateify the objects
+     */
+    if (this.start) this.start = new Date(this.start);
+    if (this.end) this.end = new Date(this.end);
+    if (this.duedate) this.duedate = new Date(this.duedate);
+}
+
+/**
+ * Validate if the date is valid or not
+ * @return {Boolean} [description]
+ */
+Topic.prototype.isValidDate = function(d){
+    return Object.prototype.toString.call(d) === '[object Date]' && !isNaN(d.getTime());
 }
 
 /**
  * Set the start date
  * @return {[type]} [description]
  */
-Topic.prototype.setStart = function(){
-
+Topic.prototype.setStart = function(date){
+    if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
+    this.start = date;
+    this.changesMade = true;
 }
 
 /**
  * Set the end date
  * @return {[type]} [description]
  */
-Topic.prototype.setEnd = function(){
-
+Topic.prototype.setEnd = function(date){
+    if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
+    this.end = date;
+    this.changesMade = true;
 }
 
 /**
  * Set the due date
  * @return {[type]} [description]
  */
-Topic.prototype.setDueDate = function(){
-
+Topic.prototype.setDueDate = function(date){
+    if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
+    this.duedate = date;
+    this.changesMade = true;
 }
 
 /**
  * Checks if the topic has date
  * @return {Boolean} [description]
  */
-Topic.prototype.hasDate = function(){
-
+Topic.prototype.hasDates = function(){
+    return !!(this.start || this.end || this.duedate);
 }
 
 /**
  * Adjust all dates that has a due date by an offset
  * @return {[type]} [description]
  */
-Topic.prototype.setAllByOffset = function(){
-
+Topic.prototype.setAllByOffset = function(offset){
+    if (!this.changesMade || !this.hasDates) return;
+    if (this.start) this.start.setDate(this.start.getDate() + offset);
+    if (this.end) this.end.setDate(this.end.getDate() + offset);
+    if (this.duedate) this.duedate.setDate(this.duedate.getDate() + offset);
 }
 
 /**
@@ -93,15 +118,24 @@ Topic.prototype.setAllByOffset = function(){
  * @return {Boolean} [description]
  */
 Topic.prototype.isModule = function(){
+    return this.isModule;
+}
 
+/**
+ * Returns if the topic is a topic
+ * @return {Boolean} [description]
+ */
+Topic.prototype.isTopic = function(){
+    return !this.isModule;
 }
 
 /**
  * Save the topic
+ * TODO
  * @return {[type]} [description]
  */
 Topic.prototype.save = function(){
-
+    if (!this.hasDates()) return true;
     var _this = this;
     function createPostData(){
 

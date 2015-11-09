@@ -23,3 +23,7 @@ Development steps
  - npm install
  - grunt
  	- this concats and watches files for changes
+
+TODO
+====
+ - Search code for "TODO"
