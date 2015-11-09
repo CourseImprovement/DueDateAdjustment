@@ -14,7 +14,7 @@ Follow these steps:
  - Import the build
 
 ```
-<script src='duedateadjustment.js?orgId={orgId}&orgName={orgName}&orgUnitId={orgUnitId}&orgUnitName={orgUnitName}'></script>
+<script src='duedateadjustment.js?orgId={orgId}&orgName={orgName}&orgUnitId={orgUnitId}&orgUnitName={orgUnitName}&d2lddc=true'></script>
 ```
 
 Development steps
