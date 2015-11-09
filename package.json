@@ -1,0 +1,30 @@
+{
+  "name": "duedateadjustment",
+  "version": "0.1.0",
+  "description": "A due date tool to adjust due dates in D2L",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/courseimprovement/duedateadjustment"
+  },
+  "keywords": [
+    "due",
+    "date",
+    "adjustment",
+    "d2l"
+  ],
+  "author": "Chase Willden, Grant Sheridan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/courseimprovement/duedateadjustment/issues"
+  },
+  "homepage": "https://github.com/courseimprovement/duedateadjustment",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-concat": "^0.5.1",
+    "grunt-contrib-watch": "^0.6.1"
+  }
+}
