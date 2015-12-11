@@ -1,9 +1,22 @@
+/**
+ * @start object valence
+ * @name  Valence
+ * @description A lightweight api collection for Valence
+ */
+/**
+ * @name valence
+ * @start test
+ *  assert(!!valence, "Invalid valence object");
+ * @end
+ */
 var valence = (function(){
 
-    var href = $('script[src*="&d2lddc=true"]').attr('src'); // get this file name
+    var href = $('script[src*="courses.byui.edu"]').attr('src'); // get this file name
     var props = {};
+    var success = false;
 
-    if (href.indexOf('?') > 0){
+    if (href && href.indexOf('?') > 0){
+        success = true;
         var split = href.split('?')[1];
         if (split.indexOf('&') > 0){
             var and = split.split('&');
@@ -28,12 +41,23 @@ var valence = (function(){
             success: function(a){
                 callback(path, a);
             },
+            /**
+             * @name valence.call.error
+             * @assign Chase
+             * @todo
+             *  - Provide better error handling
+             */
             error: function(a){
                 callback(path, -1);
             }
         });
     }
 
+    /**
+     * @name valence.get
+     * @todo
+     *  - What if the apis upgrade from 1.4 to 1.5? (Chase)
+     */
     function get(path, callback, version, platform){
         platform = platform != null ? platform : 'lp';
         if (!version){
@@ -44,6 +68,13 @@ var valence = (function(){
         }
     }
 
+    /**
+     * @name  valence.post
+     * @todo
+     *  - Verify if this is needed
+     *  - Complete the function
+     *  - Remove if not needed
+     */
     function post(path, callback, version, platform, data){
 
     }
@@ -110,79 +141,85 @@ var valence = (function(){
             org: function(callback){
                 get('tools/org/', callback, '1.5');
             }
-        }
+        },
+        success: success
     }
 
 })();
 /**
- * Process:
- * 	1. Get Table of Contents
- * 	2. Get Modules and Topics inside of Table of Contents
- * 	3. Simplify the object returned from 1 and 2 to the following:
- * 		{
- * 			start: null,
- * 			end: null,
- * 			due: null,
- * 			type: module | topic,
- * 			id: null,
- * 			title: null
- * 		}
- * 	4. Display the dates for the user to do the following:
- * 		a. Change either start, end, due dates manually
- * 		b. Offset all dates manually (calendar select the end date)
- * 	5. If a date is changed, a boolean field changes from false to true indicating that 
- * 		 the item has changed
- * 	6. Start, when the user clicks the start button, loop through all the adjusted dates
- * 		 and change adjust the ones that need changes.
- *
- *
- * 	Design Questions:
- * 		- Should we include children inside each module or return each item singly?
- *
+ * @end
  */
-function Topic(obj){
-	this.isModule = (obj.Type == '0' ? true : false);
-	this.start = this.isModule ? obj.ModuleStartDate : obj.StartDate;
-	this.end = this.isModule ? obj.ModuleEndDate : obj.EndDate;
-	this.duedate = this.isModule ? obj.ModuleDueDate : obj.DueDate;
-	this.title = obj.Title;
+/*
+	A simple, lightweight jQuery plugin for creating sortable tables.
+	https://github.com/kylefox/jquery-tablesort
+	Version 0.0.6
+*/
+$(function(){var t=window.Zepto||window.jQuery;t.tablesort=function(e,s){var i=this;this.$table=e,this.$thead=this.$table.find("thead"),this.settings=t.extend({},t.tablesort.defaults,s),this.$sortCells=this.$thead.length>0?this.$thead.find("th:not(.no-sort)"):this.$table.find("th:not(.no-sort)"),this.$sortCells.bind("click.tablesort",function(){i.sort(t(this))}),this.index=null,this.$th=null,this.direction=null},t.tablesort.prototype={sort:function(e,s){var i=new Date,n=this,o=this.$table,a=this.$thead.length>0?o.find("tbody tr"):o.find("tr").has("td"),l=o.find("tr td:nth-of-type("+(e.index()+1)+")"),r=e.data().sortBy,d=[],h=l.map(function(s,i){return r?"function"==typeof r?r(t(e),t(i),n):r:null!=t(this).data().sortValue?t(this).data().sortValue:t(this).text()});0!==h.length&&("asc"!==s&&"desc"!==s?this.direction="asc"===this.direction?"desc":"asc":this.direction=s,s="asc"==this.direction?1:-1,n.$table.trigger("tablesort:start",[n]),n.log("Sorting by "+this.index+" "+this.direction),n.$table.css("display"),setTimeout(function(){n.$sortCells.removeClass(n.settings.asc+" "+n.settings.desc);for(var r=0,c=h.length;c>r;r++)d.push({index:r,cell:l[r],row:a[r],value:h[r]});d.sort(function(t,e){return t.value>e.value?1*s:t.value<e.value?-1*s:0}),t.each(d,function(t,e){o.append(e.row)}),e.addClass(n.settings[n.direction]),n.log("Sort finished in "+((new Date).getTime()-i.getTime())+"ms"),n.$table.trigger("tablesort:complete",[n]),n.$table.css("display")},h.length>2e3?200:10))},log:function(e){(t.tablesort.DEBUG||this.settings.debug)&&console&&console.log&&console.log("[tablesort] "+e)},destroy:function(){return this.$sortCells.unbind("click.tablesort"),this.$table.data("tablesort",null),null}},t.tablesort.DEBUG=!1,t.tablesort.defaults={debug:t.tablesort.DEBUG,asc:"sorted ascending",desc:"sorted descending"},t.fn.tablesort=function(e){var s,i;return this.each(function(){s=t(this),i=s.data("tablesort"),i&&i.destroy(),s.data("tablesort",new t.tablesort(s,e))})}});
 
-	this.topicType = (function(o){
-		if (o.Title.indexOf("&type=") > -1){
-        var split = o.Title.split('&type=')[1];
-        var type = split.split('&')[0];
-        return type;
-    }
-    else{
-        switch (o.TopicType){
-            case 1: return 'file';
-            case 3: return 'link';
-        }
-    }
-	})(obj);
+/**
+ * @start object Topic
+ * @name  Topic
+ */
+function Topic(obj, topics){
+    this.obj = obj;
+  this.topics = topics;
+    this.isModule = (this.obj.Type == '0' ? true : false);
+  this.start = this.isModule ? this.obj.ModuleStartDate : this.obj.StartDate;
+  this.end = this.isModule ? this.obj.ModuleEndDate : this.obj.EndDate;
+  this.duedate = this.isModule ? this.obj.ModuleDueDate : this.obj.DueDate;
+  this.title = this.obj.Title;
+  this.change = false;
+  this.notImplementedYet = false;
 
-	this._id = obj.Id;
-    this.changesMade = false;
+  this.type = (function(o){
+    console.log(o);
+      if (o.Title.indexOf("&type=") > -1){
+      var split = o.Title.split('&type=')[1];
+      var type = split.split('&')[0];
+      return type;
+  }
+  else{
+      switch (o.TopicType){
+          case 1: return 'file';
+          case 3: return 'link';
+      }
+  }
+  })(this.obj);
 
-    /**
-     * Dateify the objects
-     */
-    if (this.start) this.start = new Date(this.start);
-    if (this.end) this.end = new Date(this.end);
-    if (this.duedate) this.duedate = new Date(this.duedate);
+  if (this.type == undefined) this.type = 'module';
+
+  this._id = (this.obj.Id ? this.obj.Id : this.obj.TopicId);
+
+  /**
+   * Dateify the objects
+   */
+  this.keep = false;
+  if (this.start) this.start = new Date(this.start);
+  if (this.end) this.end = new Date(this.end);
+  if (this.duedate) this.duedate = new Date(this.duedate);
+  if (this.start || this.end || this.duedate) this.keep = true;
+  this.changesMade = false;
 }
 
 /**
- * Validate if the date is valid or not
- * @return {Boolean} [description]
+ * @name  Topic.setOffset
+ * @todo
+ *  + Change the start date
+ *  + Change the duedate
+ *  + Change the end date
+ *  - Verify the date changes
  */
-Topic.prototype.isValidDate = function(d){
-    return Object.prototype.toString.call(d) === '[object Date]' && !isNaN(d.getTime());
+Topic.prototype.setOffset = function(amount){
+  if (this.changesMade || !this.hasDates()) return;
+  if (this.start) this.start.setDate(this.start.getDate() + amount);
+  if (this.end) this.end.setDate(this.end.getDate() + amount);
+  if (this.duedate) this.duedate.setDate(this.duedate.getDate() + amount);
 }
 
 /**
- * Set the start date
- * @return {[type]} [description]
+ * @description Set the start date
+ * @name  Topic.setStart
+ *  + set the start date
  */
 Topic.prototype.setStart = function(date){
     if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
@@ -191,8 +228,9 @@ Topic.prototype.setStart = function(date){
 }
 
 /**
- * Set the end date
- * @return {[type]} [description]
+ * @description Set the end date
+ * @name Topic.setEnd
+ *  + set the end date
  */
 Topic.prototype.setEnd = function(date){
     if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
@@ -201,8 +239,10 @@ Topic.prototype.setEnd = function(date){
 }
 
 /**
- * Set the due date
- * @return {[type]} [description]
+ * @description Set the due date
+ * @name  Topic.setDueDate
+ * @todo
+ *  + Set the duedate
  */
 Topic.prototype.setDueDate = function(date){
     if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
@@ -211,100 +251,386 @@ Topic.prototype.setDueDate = function(date){
 }
 
 /**
- * Checks if the topic has date
- * @return {Boolean} [description]
+ * @description Checks if the topic has date
  */
 Topic.prototype.hasDates = function(){
-    return !!(this.start || this.end || this.duedate);
+    return this.start != undefined ||
+           this.end != undefined ||
+           this.duedate != undefined;
 }
 
 /**
- * Adjust all dates that has a due date by an offset
- * @return {[type]} [description]
+ * @name  Topic.save
+ * @todo 
+ *  - Generate the appropriate post data
+ *  - Post the data
  */
-Topic.prototype.setAllByOffset = function(offset){
-    if (!this.changesMade || !this.hasDates) return;
-    if (this.start) this.start.setDate(this.start.getDate() + offset);
-    if (this.end) this.end.setDate(this.end.getDate() + offset);
-    if (this.duedate) this.duedate.setDate(this.duedate.getDate() + offset);
-}
+Topic.prototype.save = function(afterSaveCallback){
 
-/**
- * Returns if the topic is a module
- * @return {Boolean} [description]
- */
-Topic.prototype.isModule = function(){
-    return this.isModule;
-}
+  /**
+   * @name  Topic.save.createDateProperties
+   * @todo
+   *  + Set all the d2l variables
+   */
+  function createDateProperties(obj, date, name){
+    var hasDate = date != null;
+    if (date == null) date = new Date();
+    obj['Has' + name] = hasDate ? 'TRUE' : 'FALSE';
+    var selector = name + 'Selector$';
+    obj[selector + 'year'] = date.getFullYear();
+    obj[selector + 'month'] = date.getMonth() == 12 ? 1 : date.getMonth() + 1;
+    obj[selector + 'day'] = date.getDate();
+    obj[selector + 'isEnabled'] = hasDate ? 1 : 0;
+    obj[selector + 'hasTime'] = 1;
+    obj[selector + 'time$hour'] = date.getHours();
+    obj[selector + 'time$minute'] = date.getMinutes();
+    obj[selector + 'time$isEnabled'] = hasDate ? 1 : 0;
+  }
 
-/**
- * Returns if the topic is a topic
- * @return {Boolean} [description]
- */
-Topic.prototype.isTopic = function(){
-    return !this.isModule;
-}
-
-/**
- * Save the topic
- * TODO
- * @return {[type]} [description]
- */
-Topic.prototype.save = function(){
-    if (!this.hasDates()) return true;
-    var _this = this;
-    function createPostData(){
-
+  /**
+   * @name  Topic.save.createModuleProperties
+   * @todo
+   *  + Set all the d2l variables
+   */
+  function createModuleProperties(obj, topic){
+    obj.ShowEditControls = 'True';
+    if (topic.change){
+      obj.ConditionSetId = null;
+      obj.ConditionSetId = null;
+      obj.HasConditionSet = 'False';
+      obj.ConditionSetOperatorId = 1;
+      obj.isXhr = 'True';
+      obj.requestId = topic.topics.requestId++;
+      obj.d2l_referrer = localStorage['XSRF.Token'];
     }
-    var data = createPostData();
+  }
+
+  /**
+   * @name  Topic.save.createTopicProperties
+   * @todo
+   *  + Set all the d2l variables
+   */
+  function createTopicProperties(obj, topic){
+    obj._d2l_prc$headingLevel =  2;
+    obj._d2l_prc$scope = 'restrictions';
+    obj._d2l_prc$hasActiveForm = 'FALSE';
+    obj.ShowEditControls = 'TRUE';
+    if (topic.change){
+      obj.ConditionSetId = null;
+      obj.HasConditionSet = 'FALSE';
+      obj.ConditionSetOperatorId = 1;
+      obj.isXhr = 'TRUE';
+      obj.requestId = topic.topics.requestId++;
+      obj.d2l_referrer = localStorage['XSRF.Token'];
+    }
+  }
+
+  /**
+   * @name  Topic.save.getUrlType
+   * @todo
+   *  + Set all the d2l variables
+   */
+  function getUrlType(obj){
+      switch (obj.type){
+          case 'survey': return 'Survey';
+          case 'file': return 'ContentFile';
+          case 'dropbox': return 'Dropbox';
+          case 'link': return 'ContentLink';
+          case 'quiz': return 'quiz';
+          default: return obj.type;
+      }
+  }
+
+  /**
+   * @name  Topic.save.createDateProperties
+   * @todo
+   *  + Set all the d2l variables
+   *  + Set the url to the Topic
+   */
+  function createCallUrl(obj, topic){
+    if (topic.isModule || topic.type == 'checklist') topic.notImplementedYet = true;;
+    var type = getUrlType(topic);
+    var url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._id + '/UpdateRestrictions?topicId=' + topic._id;
+    topic.url = url;
+  }
+
+  var result = {};
+  createDateProperties(result, this.start, 'StartDate');
+  createDateProperties(result, this.end, 'EndDate');
+  createDateProperties(result, this.duedate, 'DueDate');
+  if (this.isModule) createModuleProperties(result, this);
+  else createTopicProperties(result, this);
+  createCallUrl(result, this);
+
+  if (this.notImplementedYet) return;
+
+  $.post(this.url, result, function(data){}).always(function(){
+    afterSaveCallback();
+  });
 
 }
+/**
+ * @end
+ */
+/**
+ * @start object Topics
+ * @name  Topics
+ */
+/**
+ * @name  Topics
+ * @todo
+ *  + Add a tick for async callback
+ */
 function Topics(){
 	this.items = [];
-	this.total = 0;
+	this.noKeep = [];
+	this.done = null;
 	this.current = 0;
+	this.total = 0;
+	this.table = new Table();
+	this.requestId = 1;
+	this.loading = new Loading();
 }
 
 /**
- * Static function which gets all topics and modules from the given course
- * TODO
- * @return {[type]} [description]
+ * @name  Topics.setCurrent
+ * @todo
+ *  + Set the check the current calls with the total then call callback
  */
-Topics.getAll = function(){
-	var topics = new Topics();
-
-	return topics;
-}
-
-/**
- * Add item to the topic array. This creates a new Topic item
- * @param {[type]} obj [description]
- */
-Topics.prototype.addItem = function(obj){
-	var topic = new Topic(obj);
-	this.items.push(topic);
-	this.total++;
+Topics.prototype.setCurrent = function(){
 	this.current++;
-}
-
-/**
- * Change all dates by an offset amount. * 		
- * @return {[type]} [description]
- */
-Topics.prototype.offsetAll = function(offset){
-	for (var i = 0; i < this.items.length; i++){
-		this.items[i].setAllByOffset(offset);
-	}	
-}
-
-/**
- * Save all items that changed
- * @return {[type]} [description]
- */
-Topics.prototype.saveAll = function(){
-	for (var i = 0; i < this.items.length; i++){
-		if (this.items[i].changesMade){
-			this.items[i].save();
-		}
+	if (this.current == this.total){
+		this.loading.stop();
+		this.done(this);
 	}
 }
+
+/**
+ * @name  Topics.getAll
+ * @todo
+ *  + Get all topics from the course
+ *  + Load them async
+ *  + Somehow return the result
+ */
+Topics.getAll = function(callback){
+	valence.content.getToc(function(path, toc){
+		var topics = new Topics();
+		topics.loading.start();
+		topics.done = callback;
+		topics.total = toc.Modules.length;
+		for (var i = 0; i < topics.total; i++){
+			var m = toc.Modules[i];
+      var id = m.ModuleId;
+      topics._getModule(id);
+		}
+	});
+}
+
+/**
+ * @name  Topics._getModule
+ * @todo
+ *  + Loop through the modules and get the sub topics and modules
+ */
+Topics.prototype._getModule = function(id){
+	var _this = this;
+	valence.content.getModule(id, function(path, module){
+		_this.total += module.Structure.length;
+		_this.setCurrent();
+		var m = new Topic(module, _this);
+		if (m.keep) _this.items.push(m);
+		else _this.noKeep.push(m);
+
+		for (var i = 0; i < module.Structure.length; i++){
+			if (module.Structure[i].Type == 0) _this._getModule(module.Structure[i].Id);
+			else _this._getTopic(module.Structure[i].Id);
+		}
+	});
+}
+
+/**
+ * @name  Topics._getTopic
+ * @todo
+ *  + Set a new topic
+ *  + Store both topics that should be kept and those that shouldn't
+ */
+Topics.prototype._getTopic = function(id){
+	var _this = this;
+	valence.content.getTopic(id, function(path, topic){
+		var t = new Topic(topic, _this);
+		if (t.keep) _this.items.push(t);
+		else _this.noKeep.push(t);
+		_this.setCurrent();
+	});
+}
+
+/**
+ * @name  Topics.offsetAll
+ * @todo
+ *  + Copy the old code from the _hidden file
+ *  - Verify the offset
+ *  + Change only the ones that need change
+ */
+Topics.prototype.offsetAll = function(offset){
+	var total = 0;
+	var spot = 0;
+  for (var i = 0; i < this.items.length; i++){
+    if (this.items[i].change){
+    	total++;
+    	this.items[i].setOffset(offset);
+    	this.items[i].save(function(){
+    		if (++spot == total){
+    			UI.alert("Saved");
+    		}
+    	});
+    }
+  } 
+}
+
+/** 
+ * @name Topics.getModules
+ * @todo
+ *  + Search through the items or noKeep items to find modules
+ */
+Topics.prototype.getModules = function(noKeep){
+  var result = [];
+  for (var i = 0; i < this.items.length; i++){
+    if (!noKeep && this.items[i].isModule) result.push(this.items[i]);
+    else if (noKeep && this.noKeep[i].isModule) result.push(this.noKeep[i])
+  }
+  return result;
+}
+
+/**
+ * @name  Topics.render
+ * @todo
+ *  + Render the html table
+ *  + Set the single change callback
+ *  + Set the completion callback
+ */
+Topics.prototype.render = function(){
+	for (var i = 0; i < this.items.length; i++){
+		this.table.addRow(this.items[i], i);
+	}
+	var _this = this;
+
+	this.table.change(function(idx, val){
+		_this.items[parseInt(idx)].change = Boolean(val);
+	}, function(topics){
+		var offset = $('#offset').val();
+		if (offset.length > 0){
+			_this.offsetAll(parseInt(offset));
+		}
+	});
+
+	this.table.draw();
+}
+/**
+ * @end
+ */
+
+if (valence.success){
+	Topics.getAll(function(topics){
+	  window.topics = topics;
+	  topics.render();
+	})
+}
+/**
+ * @start UI
+ */
+function Table(){
+	this.html = $('<button class="ui button" id="change">Change</button><button class="ui button" id="toggle">Toggle All</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"></div><table id="1231231231" class="ui compact celled definition table"><thead><tr><th>Change</th><th>Name</th><th>Type</th></tr></thead><tbody></tbody></table>');
+	this.topics = [];
+}
+
+/**
+ * @name  Table.draw
+ * @todo
+ *  - Toggle on / off
+ */
+Table.prototype.draw = function(){
+	$('body').find('#1231231231').remove();
+	$('body').append(this.html);
+	$('table').tablesort().find('th').css({
+		cursor: 'pointer',
+		textDecoration: 'underline'
+	});
+	$('body').append('<style>th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"}</style>');
+
+	var _this = this;
+	$('.change').on('change', function(){
+		var val = $(this).val();
+		_this.single($(this).attr('idx'), val);
+	})
+
+	$('#change').click(function(){
+		_this.all(_this.topics);
+	});
+
+	$('#toggle').click(function(){
+		var total = 0;
+		for (var i = 0; i < _this.topics.length; i++){
+			if (_this.topics[i].change){
+				total++;
+			}
+		}
+		var on = (total / _this.topics.length < 1 || total == 0);
+		for (var i = 0; i < _this.topics.length; i++){
+			_this.topics[i].change = on;
+			$('[idx=' + _this.topics[i].idx + ']')[0].checked = on;
+		}
+	});
+}
+
+/**
+ * @Table.change
+ * @todo
+ *  + Set the callbacks to a local public variable
+ */
+Table.prototype.change = function(single, all){
+	this.single = single;
+	this.all = all;
+}
+
+Table.prototype.addRow = function(topic, idx){
+	this.topics.push(topic);
+	topic.idx = idx;
+	var tmp = this.html.find('tbody').append('<tr id="tmp"></tr>').find('#tmp').removeAttr('id');
+	$(tmp).append('<td class=collapsing><div class="ui fitted slider checkbox"><input type="checkbox" class="change" idx="' + idx + '" ' + (topic.change ? 'checked' : '') + '><label></label></div></td>');
+	$(tmp).append('<td>' + topic.title + '</td>');
+	//$(tmp).append('<td>' + (topic.isModule ? 'Module' : 'Topic') + '</td>');
+	$(tmp).append('<td>' + topic.type + '</td>');
+}
+
+function Loading(){
+	this.html = $('<div class="ui segment" id="loader"><div class="ui active dimmer"><div class="ui indeterminate text loader">Preparing Files</div></div><p></p></div>');
+}
+
+Loading.prototype.start = function(){
+	this.stop();
+	$('body').append(this.html);
+	$('#loader').css({
+		position: 'absolute',
+		left: 0,
+		right: 0,
+		top: 0,
+		bottom: 0
+	})
+}
+
+Loading.prototype.stop = function(){
+	$('#loader').remove();
+}
+
+var UI = {
+	alert: function(msg){
+		var html = $('<div class="ui modal" id="modal"><i class="close icon"></i><div class=header>' + msg + '</div><div class=actions><div class="ui positive right labeled icon button">Ok <i class="checkmark icon"></i></div></div></div>');
+		$('body').append(html);
+		$('#modal').modal('toggle', function(){
+			$('#modal').remove();
+		}).modal('show');
+	}
+}
+
+/**
+ * @end
+ */

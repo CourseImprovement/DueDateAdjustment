@@ -1,9 +1,22 @@
+/**
+ * @start object valence
+ * @name  Valence
+ * @description A lightweight api collection for Valence
+ */
+/**
+ * @name valence
+ * @start test
+ *  assert(!!valence, "Invalid valence object");
+ * @end
+ */
 var valence = (function(){
 
     var href = $('script[src*="courses.byui.edu"]').attr('src'); // get this file name
     var props = {};
+    var success = false;
 
-    if (href.indexOf('?') > 0){
+    if (href && href.indexOf('?') > 0){
+        success = true;
         var split = href.split('?')[1];
         if (split.indexOf('&') > 0){
             var and = split.split('&');
@@ -28,12 +41,23 @@ var valence = (function(){
             success: function(a){
                 callback(path, a);
             },
+            /**
+             * @name valence.call.error
+             * @assign Chase
+             * @todo
+             *  - Provide better error handling
+             */
             error: function(a){
                 callback(path, -1);
             }
         });
     }
 
+    /**
+     * @name valence.get
+     * @todo
+     *  - What if the apis upgrade from 1.4 to 1.5? (Chase)
+     */
     function get(path, callback, version, platform){
         platform = platform != null ? platform : 'lp';
         if (!version){
@@ -44,6 +68,13 @@ var valence = (function(){
         }
     }
 
+    /**
+     * @name  valence.post
+     * @todo
+     *  - Verify if this is needed
+     *  - Complete the function
+     *  - Remove if not needed
+     */
     function post(path, callback, version, platform, data){
 
     }
@@ -110,7 +141,11 @@ var valence = (function(){
             org: function(callback){
                 get('tools/org/', callback, '1.5');
             }
-        }
+        },
+        success: success
     }
 
 })();
+/**
+ * @end
+ */
