@@ -111,7 +111,6 @@ Topic.prototype.offsetByCal = function(cal, type){
  *  + set the start date
  */
 Topic.prototype.setStart = function(date){
-    if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
     this.start = date;
 }
 
@@ -121,7 +120,6 @@ Topic.prototype.setStart = function(date){
  *  + set the end date
  */
 Topic.prototype.setEnd = function(date){
-    if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
     this.end = date;
 }
 
@@ -132,7 +130,6 @@ Topic.prototype.setEnd = function(date){
  *  + Set the duedate
  */
 Topic.prototype.setDueDate = function(date){
-    if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
     this.duedate = date;
 }
 
