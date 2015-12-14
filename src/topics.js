@@ -49,7 +49,7 @@ Topics.getAll = function(callback){
 		topics.done = callback;
 		// Loop through each module
 		for (var i = 0; i < toc.Modules.length; i++){
-			contents = contents.concat(topics.getModuleRecursive(modules[i]));
+			contents = contents.concat(topics.getModuleRecursive(toc.Modules[i]));
 		}
 
 		topics.total = contents.length;
@@ -185,10 +185,24 @@ Topics.prototype.render = function(){
 	this.table.change(function(idx, val){
 		_this.items[parseInt(idx)].change = Boolean(val);
 	}, function(topics){
-		var offset = $('#offset').val();
-		if (offset.length > 0){
-			_this.offsetAll(parseInt(offset));
-		}
+		// var offset = $('#offset').val();
+		// if (offset.length > 0){
+		// 	_this.offsetAll(parseInt(offset));
+		// }
+
+		var total = 0;
+		var spot = 0;
+	  for (var i = 0; i < _this.items.length; i++){
+	    if (_this.items[i].post){
+	    	total++;
+	    	_this.items[i].save(function(){
+	    		if (++spot == total){
+	    			UI.alert("Saved");
+	    		}
+	    	});
+	    }
+	  } 
+
 	});
 
 	this.table.draw();

@@ -1,20 +1,20 @@
-/**
+ /*
  * @start object Topic
  * @name  Topic
  */
 function Topic(obj, topics){
-    this.obj = obj;
+  this.obj = obj;
   this.topics = topics;
-    this.isModule = (this.obj.Type == '0' ? true : false);
+  this.isModule = (this.obj.Type == '0' ? true : false);
   this.start = this.isModule ? this.obj.ModuleStartDate : this.obj.StartDate;
   this.end = this.isModule ? this.obj.ModuleEndDate : this.obj.EndDate;
   this.duedate = this.isModule ? this.obj.ModuleDueDate : this.obj.DueDate;
   this.title = this.obj.Title;
   this.change = false;
   this.notImplementedYet = false;
+  this.post = false;
 
   this.type = (function(o){
-    console.log(o);
       if (o.Title.indexOf("&type=") > -1){
       var split = o.Title.split('&type=')[1];
       var type = split.split('&')[0];
@@ -40,7 +40,6 @@ function Topic(obj, topics){
   if (this.end) this.end = new Date(this.end);
   if (this.duedate) this.duedate = new Date(this.duedate);
   if (this.start || this.end || this.duedate) this.keep = true;
-  this.changesMade = false;
 }
 
 /**
@@ -49,13 +48,61 @@ function Topic(obj, topics){
  *  + Change the start date
  *  + Change the duedate
  *  + Change the end date
- *  - Verify the date changes
+ *  + Verify the date changes
  */
-Topic.prototype.setOffset = function(amount){
-  if (this.changesMade || !this.hasDates()) return;
-  if (this.start) this.start.setDate(this.start.getDate() + amount);
-  if (this.end) this.end.setDate(this.end.getDate() + amount);
-  if (this.duedate) this.duedate.setDate(this.duedate.getDate() + amount);
+Topic.prototype.setOffset = function(amount, type){
+  if (!this.hasDates()) return;
+  if (!type){
+    if (this.start) this.start.setDate(this.start.getDate() + amount);
+    if (this.end) this.end.setDate(this.end.getDate() + amount);
+    if (this.duedate) this.duedate.setDate(this.duedate.getDate() + amount);
+  }
+  else{
+    this[type] = new Date(this[type].setDate(this[type].getDate() + amount));
+  }
+  this.post = true;
+}
+
+/**
+ * @name  Topic.setChecked
+ * @todo
+ *  + Set the checkmark
+ */
+Topic.prototype.setChecked = function(val){
+  $(this.ele).find('.change')[0].checked = val;
+  this.change = val;
+}
+
+/**
+ * @name Topic.offsetByCal
+ * @todo
+ *  + offset the date by day, month, year
+ */
+Topic.prototype.offsetByCal = function(cal, type){
+
+  var _this = this;
+  function difference(date1, date2){
+    var timeDiff = date2.getTime() - date1.getTime();
+    return Math.ceil(timeDiff / (1000 * 3600 * 24)); 
+  }
+
+  var selectedDate = null;
+  var toDate = new Date(cal.year, cal.month, cal.day);
+
+  selectedDate = this[type];
+
+  if (selectedDate == undefined || selectedDate == null){
+    switch (type){
+      case 'start': this.setStart(toDate); break;
+      case 'end': this.setEnd(toDate); break;
+      case 'duedate': this.setDueDate(toDate); break;
+    }
+  }
+  else{
+    var offset = difference(selectedDate, toDate);
+    this.setOffset(offset, type);
+  }
+  this.setChecked(true);
 }
 
 /**
@@ -66,7 +113,6 @@ Topic.prototype.setOffset = function(amount){
 Topic.prototype.setStart = function(date){
     if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
     this.start = date;
-    this.changesMade = true;
 }
 
 /**
@@ -77,7 +123,6 @@ Topic.prototype.setStart = function(date){
 Topic.prototype.setEnd = function(date){
     if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
     this.end = date;
-    this.changesMade = true;
 }
 
 /**
@@ -89,7 +134,6 @@ Topic.prototype.setEnd = function(date){
 Topic.prototype.setDueDate = function(date){
     if (!this.isValidDate(date)) throw 'Invalid Date on Topic ' + this._id;
     this.duedate = date;
-    this.changesMade = true;
 }
 
 /**
@@ -104,8 +148,8 @@ Topic.prototype.hasDates = function(){
 /**
  * @name  Topic.save
  * @todo 
- *  - Generate the appropriate post data
- *  - Post the data
+ *  + Generate the appropriate post data
+ *  + Post the data
  */
 Topic.prototype.save = function(afterSaveCallback){
 
@@ -206,6 +250,7 @@ Topic.prototype.save = function(afterSaveCallback){
 
   if (this.notImplementedYet) return;
 
+  console.log(result);
   $.post(this.url, result, function(data){}).always(function(){
     afterSaveCallback();
   });
@@ -213,4 +258,4 @@ Topic.prototype.save = function(afterSaveCallback){
 }
 /**
  * @end
- */
+ 

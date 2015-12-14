@@ -2,7 +2,7 @@
  * @start UI
  */
 function Table(){
-	this.html = $('<button class="ui button" id="change">Change</button><button class="ui button" id="toggle">Toggle All</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"></div><table id="1231231231" class="ui compact celled definition table"><thead><tr><th>Change</th><th>Name</th><th>Type</th></tr></thead><tbody></tbody></table>');
+	this.html = $('<button class="ui button" id="change">Change</button><button class="ui button" id="toggle">Toggle All</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"></div><table id="1231231231" class="ui compact celled definition table"><thead><tr><th>Change</th><th>Name</th><th>Start Date</th><th>End Date</th><th>Due Date</th><th>Type</th></tr></thead><tbody></tbody></table>');
 	this.topics = [];
 }
 
@@ -43,6 +43,8 @@ Table.prototype.draw = function(){
 			$('[idx=' + _this.topics[i].idx + ']')[0].checked = on;
 		}
 	});
+
+	$('.changeDate').picker();
 }
 
 /**
@@ -59,10 +61,18 @@ Table.prototype.addRow = function(topic, idx){
 	this.topics.push(topic);
 	topic.idx = idx;
 	var tmp = this.html.find('tbody').append('<tr id="tmp"></tr>').find('#tmp').removeAttr('id');
+	$(tmp).prop('topic', topic);
+	topic.ele = tmp[0];
 	$(tmp).append('<td class=collapsing><div class="ui fitted slider checkbox"><input type="checkbox" class="change" idx="' + idx + '" ' + (topic.change ? 'checked' : '') + '><label></label></div></td>');
 	$(tmp).append('<td>' + topic.title + '</td>');
 	//$(tmp).append('<td>' + (topic.isModule ? 'Module' : 'Topic') + '</td>');
-	$(tmp).append('<td>' + topic.type + '</td>');
+	if (topic.start) $(tmp).append('<td class="changeDate">' + moment(topic.start).local('en').format('MMM DD YYYY') + '</td>');
+	else $(tmp).append('<td class="changeDate"></td>');
+	if (topic.end) $(tmp).append('<td class="changeDate">' + moment(topic.end).local('en').format('MMM DD YYYY') + '</td>');
+	else $(tmp).append('<td class="changeDate"></td>');
+	if (topic.duedate) $(tmp).append('<td class="changeDate">' + moment(topic.duedate).local('en').format('MMM DD YYYY') + '</td>');
+	else $(tmp).append('<td class="changeDate"></td>');
+	$(tmp).append('<td class="changeDate">' + topic.type + '</td>');
 }
 
 function Loading(){
