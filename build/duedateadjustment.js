@@ -4032,7 +4032,7 @@ if (valence.success){
  * @start UI
  */
 function Table(){
-	this.html = $('<button class="ui button" id="change">Change</button><button class="ui button" id="toggle">Toggle All</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"></div><table id="1231231231" class="ui compact celled definition table"><thead><tr><th>Change</th><th>Name</th><th>Start Date</th><th>End Date</th><th>Due Date</th><th>Path</th></tr></thead><tbody></tbody></table>');
+	this.html = $('<button class="ui button" id="change">Change</button><button class="ui button" id="toggle">Toggle All</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"></div><table id="1231231231" class="ui compact celled definition table"><thead><tr><th>Change</th><th>Name</th><th>Start Date</th><th>End Date</th><th>Due Date</th><th>Path</th><th>Type</th></tr></thead><tbody></tbody></table>');
 	this.topics = [];
 }
 
@@ -4103,6 +4103,7 @@ Table.prototype.addRow = function(topic, idx){
 	if (topic.duedate) $(tmp).append('<td class="changeDate">' + moment(topic.duedate).local('en').format('MMM DD YYYY') + '</td>');
 	else $(tmp).append('<td class="changeDate"></td>');
 	$(tmp).append('<td class="changeDate">' + topic.path + '</td>');
+	$(tmp).append('<td class="changeDate">' + topic.type + '</td>');
 }
 
 function Loading(){
