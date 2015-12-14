@@ -49,7 +49,7 @@ Topics.getAll = function(callback){
 		topics.done = callback;
 		// Loop through each module
 		for (var i = 0; i < toc.Modules.length; i++){
-			contents = contents.concat(topics.getModuleRecursive(toc.Modules[i]));
+			contents = contents.concat(topics.getModuleRecursive(toc.Modules[i], ''));
 		}
 
 		topics.total = contents.length;
@@ -57,9 +57,9 @@ Topics.getAll = function(callback){
 		for (var i = 0; i < contents.length; i++){
 			// Is it a module or topic
 			if (contents[i].type == 0){
-				topics._getModule(contents[i].id, contents[i].title);
+				topics._getModule(contents[i]);
 			} else {
-				topics._getTopic(contents[i].id, contents[i].title);
+				topics._getTopic(contents[i]);
 			}
 		}
 	});
@@ -78,24 +78,26 @@ Topics.getAll = function(callback){
  *   + Add the module to the new array
  *  + Return an array with the modules and topics
  */
-Topics.prototype.getModuleRecursive = function(module){
+Topics.prototype.getModuleRecursive = function(module, path){
 	// Add module
 	var contents = [{
 		id: module.ModuleId,
 		title: module.Title,
-		type: 0
+		type: 0,
+		path: path + '/' + module.Title
 	}];
 	// Add module topics if any
 	for (var j = 0; j < module.Topics.length; j++){
 		contents.push({
 			id: module.Topics[j].TopicId,
 			title: module.Topics[j].Title,
-			type: 1
+			type: 1,
+			path: path + '/' + module.Title
 		});
 	}
 	// Get modules within the module
 	for (var j = 0; j < module.Modules.length; j++){
-		contents = contents.concat(this.getModuleRecursive(module.Modules[j]));
+		contents = contents.concat(this.getModuleRecursive(module.Modules[j], path + '/' + module.Title));
 	}
 
 	return contents;
@@ -106,10 +108,11 @@ Topics.prototype.getModuleRecursive = function(module){
  * @todo
  *  + Loop through the modules and get the sub topics and modules
  */
-Topics.prototype._getModule = function(id, title){
+Topics.prototype._getModule = function(mod){
 	var _this = this;
-	valence.content.getModule(id, function(path, module){
-		module.Title = title;
+	valence.content.getModule(mod.id, function(path, module){
+		module.Title = mod.title;
+		module['path'] = mod.path;
 		var m = new Topic(module, _this);
 		_this.items.push(m);
 		_this.setCurrent();
@@ -122,10 +125,11 @@ Topics.prototype._getModule = function(id, title){
  *  + Set a new topic
  *  + Store both topics that should be kept and those that shouldn't
  */
-Topics.prototype._getTopic = function(id, title){
+Topics.prototype._getTopic = function(top){
 	var _this = this;
-	valence.content.getTopic(id, function(path, topic){
-		topic.Title = title;
+	valence.content.getTopic(top.id, function(path, topic){
+		topic.Title = top.title;
+		topic['path'] = top.path;
 		var t = new Topic(topic, _this);
 		_this.items.push(t);
 		_this.setCurrent();
