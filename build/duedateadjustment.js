@@ -383,7 +383,6 @@ Topic.prototype.save = function(afterSaveCallback){
  */
 function Topics(){
 	this.items = [];
-	this.noKeep = [];
 	this.done = null;
 	this.current = 0;
 	this.total = 0;
@@ -406,59 +405,103 @@ Topics.prototype.setCurrent = function(){
 }
 
 /**
- * @name  Topics.getAll
- * @todo
- *  + Get all topics from the course
- *  + Load them async
- *  + Somehow return the result
+ * @name Topics.getAll 
+ * @description Takes an array of modules to be parsed and returns an array with all the modules (no modules within modules) and the topics
+ * @assign Chase and Grant
+ * @todo 
+ *  + Create a new array for all the modules and topics
+ *  + Loop through each module
+ *   + Get the module, topics, and other modules within that module via getModuleRecursive()
+ *  + Set the total number of topics and modules that will be collected
+ *  + Get each module and topic
  */
 Topics.getAll = function(callback){
 	valence.content.getToc(function(path, toc){
+		var contents = [];
 		var topics = new Topics();
 		topics.loading.start();
 		topics.done = callback;
-		topics.total = toc.Modules.length;
-		for (var i = 0; i < topics.total; i++){
-			var m = toc.Modules[i];
-      var id = m.ModuleId;
-      topics._getModule(id);
+		// Loop through each module
+		for (var i = 0; i < toc.Modules.length; i++){
+			contents = contents.concat(topics.getModuleRecursive(modules[i]));
+		}
+
+		topics.total = contents.length;
+
+		for (var i = 0; i < contents.length; i++){
+			// Is it a module or topic
+			if (contents[i].type == 0){
+				topics._getModule(contents[i].id, contents[i].title);
+			} else {
+				topics._getTopic(contents[i].id, contents[i].title);
+			}
 		}
 	});
 }
 
 /**
- * @name  Topics._getModule
+ * @name Topics.getModuleRecursive 
+ * @description Go through a module and pull out other modules, along with the topics
+ * @assign Chase and Grant
+ * @todo 
+ *  + Create a new array that contains the current module and topics
+ *  + Check if there are any topics
+ *   + Add the topics to the new array
+ *  + Check if there are more modules
+ *   + Get the other modules by calling getModuleRecursive 
+ *   + Add the module to the new array
+ *  + Return an array with the modules and topics
+ */
+Topics.prototype.getModuleRecursive = function(module){
+	// Add module
+	var contents = [{
+		id: module.ModuleId,
+		title: module.Title,
+		type: 0
+	}];
+	// Add module topics if any
+	for (var j = 0; j < module.Topics.length; j++){
+		contents.push({
+			id: module.Topics[j].TopicId,
+			title: module.Topics[j].Title,
+			type: 1
+		});
+	}
+	// Get modules within the module
+	for (var j = 0; j < module.Modules.length; j++){
+		contents = contents.concat(this.getModuleRecursive(module.Modules[j]));
+	}
+
+	return contents;
+}
+
+/**
+ * @name Topics._getModule
  * @todo
  *  + Loop through the modules and get the sub topics and modules
  */
-Topics.prototype._getModule = function(id){
+Topics.prototype._getModule = function(id, title){
 	var _this = this;
 	valence.content.getModule(id, function(path, module){
-		_this.total += module.Structure.length;
-		_this.setCurrent();
+		module.Title = title;
 		var m = new Topic(module, _this);
-		if (m.keep) _this.items.push(m);
-		else _this.noKeep.push(m);
-
-		for (var i = 0; i < module.Structure.length; i++){
-			if (module.Structure[i].Type == 0) _this._getModule(module.Structure[i].Id);
-			else _this._getTopic(module.Structure[i].Id);
-		}
+		_this.items.push(m);
+		_this.setCurrent();
 	});
 }
 
 /**
- * @name  Topics._getTopic
+ * @name Topics._getTopic
  * @todo
  *  + Set a new topic
  *  + Store both topics that should be kept and those that shouldn't
  */
-Topics.prototype._getTopic = function(id){
+Topics.prototype._getTopic = function(id, title){
 	var _this = this;
 	valence.content.getTopic(id, function(path, topic){
+		topic.Title = title;
 		var t = new Topic(topic, _this);
-		if (t.keep) _this.items.push(t);
-		else _this.noKeep.push(t);
+		_this.items.push(t);
 		_this.setCurrent();
 	});
 }
