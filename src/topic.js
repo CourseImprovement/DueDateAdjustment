@@ -11,7 +11,6 @@ function Topic(obj, topics){
   this.duedate = this.isModule ? this.obj.ModuleDueDate : this.obj.DueDate;
   this.title = this.obj.Title;
   this.change = false;
-  this.notImplementedYet = false;
   this.post = false;
   this.path = this.obj.path;
 
@@ -232,7 +231,6 @@ Topic.prototype.save = function(afterSaveCallback){
    *  + Set the url to the Topic
    */
   function createCallUrl(obj, topic){
-    if (topic.isModule || topic.type == 'checklist') topic.notImplementedYet = true;;
     var type = getUrlType(topic);
     var url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._id + '/UpdateRestrictions?topicId=' + topic._id;
     topic.url = url;
@@ -245,8 +243,6 @@ Topic.prototype.save = function(afterSaveCallback){
   if (this.isModule) createModuleProperties(result, this);
   else createTopicProperties(result, this);
   createCallUrl(result, this);
-
-  if (this.notImplementedYet) return;
 
   console.log(result);
   $.post(this.url, result, function(data){}).always(function(){
