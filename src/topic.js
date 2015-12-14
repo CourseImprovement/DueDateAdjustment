@@ -13,6 +13,7 @@ function Topic(obj, topics){
   this.change = false;
   this.notImplementedYet = false;
   this.post = false;
+  this.path = this.obj.path;
 
   this.type = (function(o){
       if (o.Title.indexOf("&type=") > -1){
