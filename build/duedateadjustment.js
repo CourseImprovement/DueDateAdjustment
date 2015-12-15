@@ -3785,7 +3785,12 @@ Topic.prototype.save = function(afterSaveCallback){
    */
   function createCallUrl(obj, topic){
     var type = getUrlType(topic);
-    var url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._id + '/UpdateRestrictions?topicId=' + topic._id;
+    var url = '';
+    if (topic.isModule){
+      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/module/' + topic._id + '/EditModuleRestrictions'
+    } else {
+      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._id + '/UpdateRestrictions?topicId=' + topic._id;
+    }
     topic.url = url;
   }
 
