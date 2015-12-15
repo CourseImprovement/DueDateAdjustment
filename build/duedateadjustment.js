@@ -149,6 +149,25 @@ var valence = (function(){
 /**
  * @end
  */
+/**
+ * @name $.tableFilter
+ * @todo
+ *  - Search through all the rows on a table and filter out the text based on input
+ */
+$.fn.tableFilter = function(op){
+	if (!op || !op.text || !op.parent) return;
+	$(this).each(function(){
+		if ($(this).text().indexOf(op.text) > -1 && $(this).parents(op.parent).prop('found') == 'false'){
+			$(this).parents(op.parent).prop('found', 'true');
+		}
+	});
+
+	$(this).parents(op.parent).each(function(){
+		if (!$(this).hasClass('picker-hidden')){
+			$(this).addClass('picker-hidden');
+		}
+	})
+}
 //! moment.js
 //! version : 2.10.6
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
@@ -4033,7 +4052,7 @@ if (valence.success){
  * @start UI
  */
 function Table(){
-	this.html = $('<button class="ui button" id="change">Change</button><button class="ui button" id="toggle">Toggle All</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"></div><table id="1231231231" class="ui compact celled definition table"><thead><tr><th>Change</th><th>Name</th><th>Start Date</th><th>End Date</th><th>Due Date</th><th>Path</th><th>Type</th></tr></thead><tbody></tbody></table>');
+	this.html = $('<button class="ui button" id="change">Change</button><button class="ui button" id="toggle">Toggle All</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"><input placeholder="Filter..." id="filter"></div><table id="1231231231" class="ui compact celled definition table"><thead><tr><th>Change</th><th>Name</th><th>Start Date</th><th>End Date</th><th>Due Date</th><th>Path</th><th>Type</th></tr></thead><tbody></tbody></table>');
 	this.topics = [];
 }
 
@@ -4049,7 +4068,7 @@ Table.prototype.draw = function(){
 		cursor: 'pointer',
 		textDecoration: 'underline'
 	});
-	$('body').append('<style>th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"}</style>');
+	$('body').append('<style>th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"} .picker-hidden{display:none;}</style>');
 
 	var _this = this;
 	$('.change').on('change', function(){
@@ -4074,6 +4093,14 @@ Table.prototype.draw = function(){
 			$('[idx=' + _this.topics[i].idx + ']')[0].checked = on;
 		}
 	});
+
+	$('#filter').keypress(function(e){
+		var val = $(this).val();
+		$('#1231231231 td').tableFilter({
+			text: val,
+			parent: 'tr'
+		});
+	})
 
 	$('.changeDate').picker();
 }
