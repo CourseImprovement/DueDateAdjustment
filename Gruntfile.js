@@ -3,7 +3,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     concat: {
       norm: {
-        src: ['src/valence.js', 'src/*.js'],
+        src: ['src/valence.js', 'src/filter.js', 'src/moment.js', 'src/picker.js', 'src/sort.js', 'src/topic.js', 'src/ui.js', 'src/topics.js'],
         dest: 'build/duedateadjustment.js'
       },
       server: {

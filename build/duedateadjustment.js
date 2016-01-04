@@ -1,4 +1,4 @@
-/**
+ /*
  * @start object valence
  * @name  Valence
  * @description A lightweight api collection for Valence
@@ -11,7 +11,7 @@
  */
 var valence = (function(){
 
-    var href = $('script[src*="courses.byui.edu"]').attr('src'); // get this file name
+    var href = $('script[src*="courses."]').attr('src'); // get this file name
     var props = {};
     var success = false;
 
@@ -129,12 +129,106 @@ var valence = (function(){
                 get(props.orgUnitId + '/content/topics/' + topicId, callback, '1.4', 'le');
             }
         },
+        dropbox: {
+            getFolder: function(callback){
+                get(props.orgUnitId + '/dropbox/folders/', callback, '1.4', 'le');
+            }
+        },
         org: {
             structure: function(callback){
                 get('orgstructure/', callback);
             },
             info: function(callback){
                 get('organization/info/', callback);
+            }
+        },
+        discussion: {
+            getForums: function(callback){
+                get(props.orgUnitId + '/discussions/forums/', callback, '1.4', 'le');
+            },
+            getTopics: function(forumId, callback){
+                get(props.orgUnitId + '/discussions/forums/' + forumId + '/topics/', callback, '1.4', 'le');
+            }
+        },
+        survey: {
+            getAll: function(callback){
+                $.get('/d2l/lms/survey/admin/surveys_manage.d2l?ou=' + props.orgUnitId, function(html){
+                    html = $(html);
+                    var result = [];
+                    $(html).find('[summary*="list of surveys"] tr:not([class]) th').each(function(){
+                        var id = $(this).find('a:first-child').attr('href').split('si=')[1].split('&')[0];
+                        var name = $(this).find('a:first-child').html();
+                        var dates = $(this).find('> div label span').text();
+                        var start = null;
+                        var end = null;
+                        if (dates != 'Always Available'){
+                            if (dates.indexOf(' - ') > -1){
+                                var ds = dates.split(' - ');
+                                start = new Date(ds[0]);
+                                end = new Date(ds[1]);
+                            }
+                            else if (dates.indexOf('Ends ') > -1){
+                                var d = dates.split('Ends ')[1];
+                                end = new Date(d);
+                            }
+                            else if (dates.indexOf('Begins ') > -1){
+                                var d = dates.split('Begins ')[1];
+                                start = new Date(d);
+                            }
+                        }
+                        result.push({id: id, name: name, start: start, end: end});
+                    });
+                    callback(result);
+                })
+            }
+        },
+        checklist: {
+            getAll: function(callback){
+                $.get('/d2l/lms/checklist/checklists.d2l?ou=' + props.orgUnitId, function(html){
+                    html = $(html);
+                    var result = [];
+                    $(html).find('[summary*="List of checklists"] tr:not([class]) th').each(function(){
+                        var id = $(this).find('a:first-child').attr('href').split('checklistId=')[1].split('&')[0];
+                        var name = $(this).find('a:first-child').text();
+                        result.push({
+                            id: id,
+                            name: name
+                        });
+                    });
+                    callback(result);
+                });
+            }
+        },
+        quiz: {
+            getAll: function(callback){
+                $.get('/d2l/lms/quizzing/admin/quizzes_manage.d2l?ou=' + props.orgUnitId, function(html){
+                    html = $(html);
+                    var result = [];
+                    $(html).find('[summary*="list of quizzes"] tr:not([class]) th').each(function(){
+                        var id = $(this).find('a:first-child').attr('href').split('qi=')[1].split('&')[0];
+                        var name = $(this).find('a:first-child').html();
+                        var dates = $(this).find('> div label span').text();
+                        var start = null;
+                        var end = null;
+                        if (dates != 'Always Available'){
+                            if (dates.indexOf(' - ') > -1){
+                                var ds = dates.split(' - ');
+                                start = new Date(ds[0]);
+                                end = new Date(ds[1]);
+                            }
+                            else if (dates.indexOf('Ends ') > -1){
+                                var d = dates.split('Ends ')[1];
+                                end = new Date(d);
+                            }
+                            else if (dates.indexOf('Begins ') > -1){
+                                var d = dates.split('Begins ')[1];
+                                start = new Date(d);
+                            }
+                        }
+                        result.push({id: id, name: name, start: start, end: end});
+                    });
+                    callback(result);
+                });
             }
         },
         tools: {
@@ -150,24 +244,18 @@ var valence = (function(){
  * @end
  */
 /**
- * @name $.tableFilter
- * @todo
- *  - Search through all the rows on a table and filter out the text based on input
+ * jquery.filterTable
+ *
+ * This plugin will add a search filter to tables. When typing in the filter,
+ * any rows that do not contain the filter will be hidden.
+ *
+ * Utilizes bindWithDelay() if available. https://github.com/bgrins/bindWithDelay
+ *
+ * @version v1.5.5
+ * @author Sunny Walker, swalker@hawaii.edu
+ * @license MIT
  */
-$.fn.tableFilter = function(op){
-	if (!op || !op.text || !op.parent) return;
-	$(this).each(function(){
-		if ($(this).text().indexOf(op.text) > -1 && $(this).parents(op.parent).prop('found') == 'false'){
-			$(this).parents(op.parent).prop('found', 'true');
-		}
-	});
-
-	$(this).parents(op.parent).each(function(){
-		if (!$(this).hasClass('picker-hidden')){
-			$(this).addClass('picker-hidden');
-		}
-	})
-}
+!function($){var e=$.fn.jquery.split("."),t=parseFloat(e[0]),n=parseFloat(e[1]);2>t&&8>n?($.expr[":"].filterTableFind=function(e,t,n){return $(e).text().toUpperCase().indexOf(n[3].toUpperCase())>=0},$.expr[":"].filterTableFindAny=function(e,t,n){var i=n[3].split(/[\s,]/),r=[];return $.each(i,function(e,t){var n=t.replace(/^\s+|\s$/g,"");n&&r.push(n)}),r.length?function(e){var t=!1;return $.each(r,function(n,i){return $(e).text().toUpperCase().indexOf(i.toUpperCase())>=0?(t=!0,!1):void 0}),t}:!1},$.expr[":"].filterTableFindAll=function(e,t,n){var i=n[3].split(/[\s,]/),r=[];return $.each(i,function(e,t){var n=t.replace(/^\s+|\s$/g,"");n&&r.push(n)}),r.length?function(e){var t=0;return $.each(r,function(n,i){$(e).text().toUpperCase().indexOf(i.toUpperCase())>=0&&t++}),t===r.length}:!1}):($.expr[":"].filterTableFind=jQuery.expr.createPseudo(function(e){return function(t){return $(t).text().toUpperCase().indexOf(e.toUpperCase())>=0}}),$.expr[":"].filterTableFindAny=jQuery.expr.createPseudo(function(e){var t=e.split(/[\s,]/),n=[];return $.each(t,function(e,t){var i=t.replace(/^\s+|\s$/g,"");i&&n.push(i)}),n.length?function(e){var t=!1;return $.each(n,function(n,i){return $(e).text().toUpperCase().indexOf(i.toUpperCase())>=0?(t=!0,!1):void 0}),t}:!1}),$.expr[":"].filterTableFindAll=jQuery.expr.createPseudo(function(e){var t=e.split(/[\s,]/),n=[];return $.each(t,function(e,t){var i=t.replace(/^\s+|\s$/g,"");i&&n.push(i)}),n.length?function(e){var t=0;return $.each(n,function(n,i){$(e).text().toUpperCase().indexOf(i.toUpperCase())>=0&&t++}),t===n.length}:!1})),$.fn.filterTable=function(e){var t={autofocus:!1,callback:null,containerClass:"filter-table",containerTag:"p",filterExpression:"filterTableFind",hideTFootOnFilter:!1,highlightClass:"alt",ignoreClass:"",ignoreColumns:[],inputSelector:null,inputName:"",inputType:"search",label:"Filter:",minChars:1,minRows:8,placeholder:"search this table",preventReturnKey:!0,quickList:[],quickListClass:"quick",quickListGroupTag:"",quickListTag:"a",visibleClass:"visible"},n=function(e){return e.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")},i=$.extend({},t,e),r=function(e,t){var n=e.find("tbody");if(""===t||t.length<i.minChars)n.find("tr").show().addClass(i.visibleClass),n.find("td").removeClass(i.highlightClass),i.hideTFootOnFilter&&e.find("tfoot").show();else{var r=n.find("td");if(n.find("tr").hide().removeClass(i.visibleClass),r.removeClass(i.highlightClass),i.hideTFootOnFilter&&e.find("tfoot").hide(),i.ignoreColumns.length){var a=[];i.ignoreClass&&(r=r.not("."+i.ignoreClass)),a=r.filter(":"+i.filterExpression+'("'+t.replace(/(['"])/g,"\\$1")+'")'),a.each(function(){var e=$(this),t=e.parent().children().index(e);-1===$.inArray(t,i.ignoreColumns)&&e.addClass(i.highlightClass).closest("tr").show().addClass(i.visibleClass)})}else i.ignoreClass&&(r=r.not("."+i.ignoreClass)),r.filter(":"+i.filterExpression+'("'+t.replace(/(['"])/g,"\\$1")+'")').addClass(i.highlightClass).closest("tr").show().addClass(i.visibleClass)}i.callback&&i.callback(t,e)};return this.each(function(){var e=$(this),t=e.find("tbody"),a=null,s=null,l=null,o=!0;"TABLE"===e[0].nodeName&&t.length>0&&(0===i.minRows||i.minRows>0&&t.find("tr").length>=i.minRows)&&!e.prev().hasClass(i.containerClass)&&(i.inputSelector&&1===$(i.inputSelector).length?(l=$(i.inputSelector),a=l.parent(),o=!1):(a=$("<"+i.containerTag+" />"),""!==i.containerClass&&a.addClass(i.containerClass),a.prepend(i.label+" "),l=$('<input type="'+i.inputType+'" placeholder="'+i.placeholder+'" name="'+i.inputName+'" />'),i.preventReturnKey&&l.on("keydown",function(e){return 13===(e.keyCode||e.which)?(e.preventDefault(),!1):void 0})),i.autofocus&&l.attr("autofocus",!0),$.fn.bindWithDelay?l.bindWithDelay("keyup",function(){r(e,$(this).val())},200):l.bind("keyup",function(){r(e,$(this).val())}),l.bind("click search input paste blur",function(){r(e,$(this).val())}),o&&a.append(l),i.quickList.length>0&&(s=i.quickListGroupTag?$("<"+i.quickListGroupTag+" />"):a,$.each(i.quickList,function(e,t){var r=$("<"+i.quickListTag+' class="'+i.quickListClass+'" />');r.text(n(t)),"A"===r[0].nodeName&&r.attr("href","#"),r.bind("click",function(e){e.preventDefault(),l.val(t).focus().trigger("click")}),s.append(r)}),s!==a&&a.append(s)),o&&e.before(a))})}}(jQuery);
 //! moment.js
 //! version : 2.10.6
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
@@ -3416,6 +3504,30 @@ $.fn.picker = function(params){
 		this.selectedDay = new Date();
 	}
 
+	var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+	function createMonthDropDown(html){
+		var filter = '<input type="hidden" name="filters">';
+		var menu = $('<div class="menu"><div class="ui icon search input"><i class="search icon"></i><input type="text" placeholder="Search months..."></div><div class="divider"></div><div class="scrolling menu"></div></div>');
+		var m = $(menu).find('.scrolling');
+		for (var i = 0; i < months.length; i++){
+			$(m).append('<div class="item" data-value="' + months[i] + '">' + months[i] + '</div>');
+		}
+		$(html).find('#monthDropDown').addClass('ui').addClass('dropdown').append(filter).append(menu);
+		return html;
+	}
+
+	function createYearDropDown(html, date){
+		var filter = '<input type="hidden" name="filters">';
+		var menu = $('<div class="menu"><div class="ui icon search input"><i class="search icon"></i><input type="text" placeholder="Search years..."></div><div class="divider"></div><div class="scrolling menu"></div></div>');
+		var m = $(menu).find('.scrolling');
+		for (var i = -2; i < 7; i++){
+			$(m).append('<div class="item" data-value="' + (date.getFullYear() + i) + '">' + (date.getFullYear() + i) + '</div>');
+		}
+		$(html).find('#yearDropDown').addClass('ui').addClass('dropdown').append(filter).append(menu);
+		return html;
+	}
+
 	Calendar.prototype.render = function(x, y){
 		$('.picker-table').remove();
 		this.raw = '<div class="picker-table"><table class="ui celled striped table"><thead><tr class="picker-dayNames"></tr></thead><tbody></tbody></table></div>';
@@ -3474,11 +3586,29 @@ $.fn.picker = function(params){
 		var grid = $(this.table).prepend('<div class="ui center aligned grid picker-header" id="tmp"></div>').find('#tmp').removeAttr('id');
 		grid.append('<div class="left floated left aligned four wide column"><a class="ui button picker-back" style="padding: 4px 20px"><</a></div>');
 		var html = '<div class="eight wide column">';
-		html += '<a href="#" style="padding: 4px 7px">' + moment(this.selectedDay).format('MMMM') + '</a>';
-		html += '<a href="#" style="padding: 4px 7px">' + this.selectedDay.getFullYear() + '</a>';
+		html += '<div id="monthDropDown"><span class="text" style="padding: 4px 7px">' + moment(this.selectedDay).format('MMMM') + '</span></div>';
+		html += '<div id="yearDropDown"><span class="text" style="padding: 4px 7px">' + this.selectedDay.getFullYear() + '</span></div>';
 		html += '</div>';
 		grid.append(html);
+		grid = $(createMonthDropDown(grid));
+		grid = $(createYearDropDown(grid, this.selectedDay));
 		grid.append('<div class="right floated right aligned four wide column"><a class="ui button picker-forward" style="padding: 4px 20px; margin: 0;">></a></div>');
+		var _this = this;
+		grid.find('#monthDropDown').dropdown({
+			action: 'hide',
+			onChange: function(value){
+				var idx = months.indexOf(value);
+				_this.selectedDay = new Date(_this.selectedDay.getFullYear(), idx, 1);
+				_this.render(_this.x, _this.y);	
+			}
+		});
+		grid.find('#yearDropDown').dropdown({
+			action: 'hide',
+			onChange: function(value){
+				_this.selectedDay = new Date(parseInt(value), _this.selectedDay.getMonth(), 1);
+				_this.render(_this.x, _this.y);	
+			}
+		});
 	}
 
 	Calendar.prototype.setNames = function(){
@@ -3586,23 +3716,56 @@ function Topic(obj, topics){
   this.post = false;
   this.path = this.obj.path;
 
+  if (this.title == 'Banana'){
+    var a = 10;
+  }
+
   this.type = (function(o){
-      if (o.Title.indexOf("&type=") > -1){
-      var split = o.Title.split('&type=')[1];
+    if (o.Url && o.Url.indexOf('&type=') > -1){
+      var split = o.Url.split('&type=')[1];
       var type = split.split('&')[0];
       return type;
-  }
-  else{
+    }
+    else{
       switch (o.TopicType){
-          case 1: return 'file';
-          case 3: return 'link';
+        case 1: return 'file';
+        case 3: return 'link';
       }
-  }
+    }
   })(this.obj);
 
   if (this.type == undefined) this.type = 'module';
 
   this._id = (this.obj.Id ? this.obj.Id : this.obj.TopicId);
+
+  if (this.type == 'dropbox'){
+    var dropbox = topics.getDropboxByName(this.title);
+    if (dropbox.Availability && dropbox.Availability.StartDate) this.start = dropbox.Availability.StartDate;
+    if (dropbox.Availability && dropbox.Availability.EndDate) this.end = dropbox.Availability.EndDate;
+    this._dropboxId = dropbox.Id;
+  }
+  else if (this.type == 'quiz'){
+    var quiz = topics.getQuizByName(this.title);
+    this._quizId = quiz.id;
+    this.start = quiz.start;
+    this.end = quiz.end;
+  }
+  else if (this.type == 'survey'){
+    var survey = topics.getSurveyByName(this.title);
+    this._surveyId = survey.id;
+    this.start = survey.start;
+    this.end = survey.end;
+  }
+  else if (this.type == 'discuss'){
+    var discuss = topics.getDiscussionByName(this.title);
+    this._discussId = discuss.id;
+    this.start = discuss.start;
+    this.end = discuss.end;
+  }
+  else if (this.type == 'checklist'){
+    var check = topics.getChecklistByName(this.title);
+    this._checklistId = check.id;
+  }
 
   /**
    * Dateify the objects
@@ -3636,13 +3799,44 @@ Topic.prototype.setOffset = function(amount, type){
 }
 
 /**
+ * @name  Topic.draw
+ * @description UPdate the dates
+ * @todo
+ *  + Update the dates (Chase)
+ */
+Topic.prototype.draw = function(){
+  if (this.start) $(this.ele).find('td:nth-child(3)').text(moment(this.start).local('en').format('MMM DD YYYY'));
+  else $(this.ele).find('td:nth-child(3)').text('');
+  if (this.end) $(this.ele).find('td:nth-child(4)').text(moment(this.end).local('en').format('MMM DD YYYY'));
+  else $(this.ele).find('td:nth-child(4)').text('');
+  if (this.duedate) $(this.ele).find('td:nth-child(5)').text(moment(this.duedate).local('en').format('MMM DD YYYY'));
+  else $(this.ele).find('td:nth-child(5)').text('');
+}
+
+/**
  * @name  Topic.setChecked
  * @todo
  *  + Set the checkmark
  */
 Topic.prototype.setChecked = function(val){
   $(this.ele).find('.change')[0].checked = val;
+  this.post = val;
   this.change = val;
+}
+
+/**
+ * @name  Topic.clearDates
+ * @description Clear the dates
+ * @todo
+ *  + Clear all 3 dates
+ *  + update the UI
+ */
+Topic.prototype.clearDates = function(){
+  this.start = null;
+  this.end = null;
+  this.duedate = null;
+  this.draw();
+  this.post = true;
 }
 
 /**
@@ -3715,6 +3909,30 @@ Topic.prototype.hasDates = function(){
 }
 
 /**
+ * @name Topic.issueWithDates
+ * @description Check if the dates conflict
+ * @todo
+ *  + Check if the start date comes after the end or due date
+ *  + check if the due date comes after the end date
+ */
+Topic.prototype.issueWithDates = function(){
+  return ((this.end && this.start) && this.start > this.end) || ((this.start && this.duedate) && this.start > this.duedate);
+}
+
+/**
+ * @name  Topic.error
+ * @description Throw an error
+ * @todo
+ *  + color the row and the cells
+ */
+Topic.prototype.error = function(msg){
+  $(this.ele).css({backgroundColor: 'rgba(219, 40, 40, 0.35)'});
+  if (this.issueWithDates()){
+    $(this.ele).find('td:nth-child(3)').css({backgroundColor: 'rgba(219, 40, 40, 0.34)'});
+  }
+}
+
+/**
  * @name  Topic.save
  * @todo 
  *  + Generate the appropriate post data
@@ -3722,6 +3940,10 @@ Topic.prototype.hasDates = function(){
  */
 Topic.prototype.save = function(afterSaveCallback){
 
+  if (this.issueWithDates()) {
+    this.error('Invalid Date Sequence');
+    return;
+  }
   /**
    * @name  Topic.save.createDateProperties
    * @todo
@@ -3792,6 +4014,7 @@ Topic.prototype.save = function(afterSaveCallback){
           case 'dropbox': return 'Dropbox';
           case 'link': return 'ContentLink';
           case 'quiz': return 'quiz';
+          case 'discuss': return 'DiscussionTopic';
           default: return obj.type;
       }
   }
@@ -3807,7 +4030,23 @@ Topic.prototype.save = function(afterSaveCallback){
     var url = '';
     if (topic.isModule){
       url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/module/' + topic._id + '/EditModuleRestrictions'
-    } else {
+    } 
+    else if (topic.type == 'dropbox'){
+      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._dropboxId + '/UpdateRestrictions?topicId=' + topic._id;
+    }
+    else if (topic.type == 'quiz'){
+      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._quizId + '/UpdateRestrictions?topicId=' + topic._id;
+    }
+    else if (topic.type == 'survey'){
+      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._surveyId + '/UpdateRestrictions?topicId=' + topic._id;
+    }
+    else if (topic.type == 'discuss'){
+      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._discussId + '/UpdateRestrictions?topicId=' + topic._id; 
+    }
+    else if (topic.type == 'checklist'){
+      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._checklistId + '/UpdateRestrictions?topicId=' + topic._id; 
+    }
+    else {
       url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._id + '/UpdateRestrictions?topicId=' + topic._id;
     }
     topic.url = url;
@@ -3821,15 +4060,171 @@ Topic.prototype.save = function(afterSaveCallback){
   else createTopicProperties(result, this);
   createCallUrl(result, this);
 
-  console.log(result);
+  if (this.type == 'dropbox'){
+
+  }
+
+  var _this = this;
   $.post(this.url, result, function(data){}).always(function(){
+    $(_this.ele).css({backgroundColor: ''});
+    $(_this.ele).find('td:nth-child(3)').css({backgroundColor: ''});
     afterSaveCallback();
   });
-
 }
 /**
  * @end
  
+/**
+ * @start UI
+ */
+function Table(){
+	this.html = $('<button class="ui button green" id="change">Submit</button><button class="ui button" id="OffsetDates">Set Offset</button><button class="ui button" id="toggle">Toggle All</button><button class="ui button" id="toggleAllWithDates">Toggle All With Dates</button><button class="ui button red" id="ClearDates">Clear Dates</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"><input placeholder="Filter..." id="filter"></div><table id="1231231231" class="ui compact celled definition table striped"><thead><tr><th>Change</th><th>Name</th><th>Start Date</th><th>End Date</th><th>Due Date</th><th>Path</th><th>Type</th></tr></thead><tbody></tbody></table>');
+	this.topics = [];
+}
+
+/**
+ * @name  Table.draw
+ * @todo
+ *  - Toggle on / off
+ */
+Table.prototype.draw = function(){
+	$('body').find('#1231231231').remove();
+	$('body').append(this.html);
+	$('table').tablesort().find('th').css({
+		cursor: 'pointer',
+		textDecoration: 'underline'
+	});
+	$('body').append('<style>.ui.modal{top:4% !important;}th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"} .picker-hidden{display:none;}.filter-table .quick{margin-left:.5em;font-size:.8em;text-decoration:none}.fitler-table .quick:hover{text-decoration:underline}td.alt{background-color:#ffc;background-color:rgba(255,255,0,.2)}</style>');
+
+	var _this = this;
+	$('.change').on('change', function(){
+		var val = $(this).val();
+		_this.single($(this).attr('idx'), val);
+	})
+
+	$('#change').click(function(){
+		topics.loading.start();
+		_this.all(_this.topics);
+	});
+
+	$('#OffsetDates').click(function(){
+		var amount = $('#offset').val();
+		_this.offsetDates(parseInt(amount));
+	});
+
+	$('#ClearDates').click(function(){
+		window.topics.clearDates();
+	})
+
+	$('#toggle').click(function(){
+		var total = 0;
+		for (var i = 0; i < _this.topics.length; i++){
+			if (_this.topics[i].change){
+				total++;
+			}
+		}
+		var on = (total / _this.topics.length < 1 || total == 0);
+		for (var i = 0; i < _this.topics.length; i++){
+			_this.topics[i].setChecked(on);
+		}
+	});
+
+	$('#toggleAllWithDates').click(function(){
+		var total = 0;
+		var len = 0;
+		for (var i = 0; i < _this.topics.length; i++){
+			if (_this.topics[i].hasDates()) len++;
+			if (_this.topics[i].hasDates() && _this.topics[i].change){
+				total++;
+			}
+		}
+		var on = (total / len < 1 || total == 0);
+		for (var i = 0; i < _this.topics.length; i++){
+			if (_this.topics[i].hasDates()) _this.topics[i].setChecked(on);
+		}
+	})
+
+	$('#1231231231').filterTable({inputSelector: '#filter'});
+	$('.changeDate').picker();
+}
+
+/**
+ * @name Table.offsetDates
+ * @assign Chase
+ * @todo
+ *  + API call to the topics prototype function
+ */
+Table.prototype.offsetDates = function(amount){
+	window.topics.uiOffsetActiveDates(amount);
+}
+
+/**
+ * @Table.change
+ * @todo
+ *  + Set the callbacks to a local public variable
+ */
+Table.prototype.change = function(single, all){
+	this.single = single;
+	this.all = all;
+}
+
+Table.prototype.addRow = function(topic, idx){
+	this.topics.push(topic);
+	topic.idx = idx;
+	var tmp = this.html.find('tbody').append('<tr id="tmp"></tr>').find('#tmp').removeAttr('id');
+	$(tmp).prop('topic', topic);
+	topic.ele = tmp[0];
+	$(tmp).append('<td class=collapsing><div class="ui fitted slider checkbox"><input type="checkbox" class="change" idx="' + idx + '" ' + (topic.change ? 'checked' : '') + '><label></label></div></td>');
+	$(tmp).append('<td>' + topic.title + '</td>');
+	//$(tmp).append('<td>' + (topic.isModule ? 'Module' : 'Topic') + '</td>');
+	if (topic.start) $(tmp).append('<td class="changeDate">' + moment(topic.start).local('en').format('MMM DD YYYY') + '</td>');
+	else $(tmp).append('<td class="changeDate"></td>');
+	if (topic.end) $(tmp).append('<td class="changeDate">' + moment(topic.end).local('en').format('MMM DD YYYY') + '</td>');
+	else $(tmp).append('<td class="changeDate"></td>');
+	if (topic.duedate) $(tmp).append('<td class="changeDate">' + moment(topic.duedate).local('en').format('MMM DD YYYY') + '</td>');
+	else $(tmp).append('<td class="changeDate"></td>');
+	$(tmp).append('<td>' + topic.path + '</td>');
+	$(tmp).append('<td>' + topic.type + '</td>');
+	$(tmp).find('.change').change(function(e){
+		var val = $(this).val() == 'on';
+		topic.post = val;
+		topic.change = val;
+	})
+}
+
+function Loading(){
+	this.html = '<div class="ui segment" id="loader"><div class="ui active dimmer"><div class="ui indeterminate text loader">Preparing Files</div></div><p></p></div>';
+}
+
+Loading.prototype.start = function(){
+	this.stop();
+	$('body').append(this.html);
+	$('#loader').css({
+		position: 'absolute',
+		left: 0,
+		right: 0,
+		top: 0,
+		bottom: 0
+	})
+}
+
+Loading.prototype.stop = function(){
+	$('#loader').remove();
+}
+
+var UI = {
+	alert: function(msg){
+		var html = $('<div class="ui modal" id="modal"><i class="close icon"></i><div class=header>' + msg + '</div><div class=actions><div class="ui positive right labeled icon button">Ok <i class="checkmark icon"></i></div></div></div>');
+		$('body').append(html);
+		$('#modal').modal('toggle', function(){
+			$('#modal').remove();
+		}).modal('show');
+	}
+}
+
+/**
+ * @end
+ */
 /**
  * @start object Topics
  * @name  Topics
@@ -3846,6 +4241,11 @@ function Topics(){
 	this.total = 0;
 	this.table = new Table();
 	this.requestId = 1;
+	this.dropboxes = [];
+	this.checklist = [];
+	this.surveys = [];
+	this.quizzes = [];
+	this.discussions = [];
 	this.loading = new Loading();
 }
 
@@ -3863,6 +4263,107 @@ Topics.prototype.setCurrent = function(){
 }
 
 /**
+ * @name  Topics.uiOffsetActiveDates
+ * @description Offset the active dates
+ * @assign Chase
+ * @todo
+ *  + Update the UI (Chase)
+ *  + Offset only the toggled on dates (Chase)
+ *  + Update the Topic object (Chase)
+ */
+Topics.prototype.uiOffsetActiveDates = function(amount){
+	var toggled = this.getToggled();
+	for (var i = 0; i < toggled.length; i++){
+		toggled[i].setOffset(amount);
+		toggled[i].draw();
+	}
+}
+
+/**
+ * @name  Topics.getToggled
+ * @description returns the toggled dates
+ * @todo
+ *  - Return the toggled dates (Chase)
+ */
+Topics.prototype.getToggled = function(){
+	var result = [];
+	for (var i = 0; i < this.items.length; i++){
+		if (this.items[i].post) result.push(this.items[i]);
+	}
+	return result;
+}
+
+/**
+ * @name  Topics.getDropboxByName
+ * @description See the title
+ * @todo
+ *  + Go through the dropboxes and find the one matching the name
+ */
+Topics.prototype.getDropboxByName = function(name){	
+	for (var i = 0; i < this.dropboxes.length; i++){
+		if (this.dropboxes[i].Name == name){
+			return this.dropboxes[i];
+		}
+	}
+}
+
+/**
+ * @name Topics.getQuizByName
+ * @description A quick and dirty way to get the quiz ids
+ * @todo
+ *  + loop through and find the matching quiz
+ */
+Topics.prototype.getQuizByName = function(name){
+	for (var i = 0; i < this.quizzes.length; i++){
+		if (this.quizzes[i].name == name) return this.quizzes[i];
+	}
+}
+
+/**
+ * @name Topics.getSurveyByName
+ * @description A quick and dirty way to get the survey ids
+ * @todo
+ *  + loop through and find the matching survey
+ */
+Topics.prototype.getSurveyByName = function(name){
+	for (var i = 0; i < this.surveys.length; i++){
+		if (this.surveys[i].name == name) return this.surveys[i];
+	}
+}
+
+/**
+ * @name Topics.getDiscussionByName
+ * @description A quick and dirty way to get the discussion ids
+ * @todo
+ *  + loop through and find the matching discussion
+ */
+Topics.prototype.getDiscussionByName = function(name){
+	for (var i = 0; i < this.discussions.length; i++){
+		if (this.discussions[i].name == name) return this.discussions[i];
+	}
+}
+
+/**
+ * @name Topics.getChecklistByName
+ * @description A quick and dirty way to get the discussion ids
+ * @todo
+ *  + loop through and find the matching discussion
+ */
+Topics.prototype.getChecklistByName = function(name){
+	for (var i = 0; i < this.checklist.length; i++){
+		if (this.checklist[i].name == name) return this.checklist[i];
+	}
+}
+
+Topics.prototype.devStart = function(){
+	var d = new Date();
+	for (var i = 0; i < this.items.length; i++){
+		this.items[i].setStart(d);
+		this.items[i].draw();
+	}
+}
+
+/**
  * @name Topics.getAll 
  * @description Takes an array of modules to be parsed and returns an array with all the modules (no modules within modules) and the topics
  * @assign Chase and Grant
@@ -3874,27 +4375,78 @@ Topics.prototype.setCurrent = function(){
  *  + Get each module and topic
  */
 Topics.getAll = function(callback){
-	valence.content.getToc(function(path, toc){
-		var contents = [];
-		var topics = new Topics();
-		topics.loading.start();
-		topics.done = callback;
-		// Loop through each module
-		for (var i = 0; i < toc.Modules.length; i++){
-			contents = contents.concat(topics.getModuleRecursive(toc.Modules[i], ''));
-		}
+	var _this = this;
+	var topics = new Topics();
+	topics.loading.start();
+	valence.checklist.getAll(function(checklist){
+		valence.dropbox.getFolder(function(a, b){
+			valence.quiz.getAll(function(quizzes){
+				valence.survey.getAll(function(surveys){
 
-		topics.total = contents.length;
+					function getTheRest(discussions){
+						valence.content.getToc(function(path, toc){
+							var contents = [];
+							topics.dropboxes = b;
+							topics.quizzes = quizzes;
+							topics.surveys = surveys;
+							topics.discussions = discussions;
+							topics.checklist = checklist;
+							topics.done = callback;
+							// Loop through each module
+							for (var i = 0; i < toc.Modules.length; i++){
+								contents = contents.concat(topics.getModuleRecursive(toc.Modules[i], ''));
+							}
 
-		for (var i = 0; i < contents.length; i++){
-			// Is it a module or topic
-			if (contents[i].type == 0){
-				topics._getModule(contents[i]);
-			} else {
-				topics._getTopic(contents[i]);
-			}
-		}
-	});
+							topics.total = contents.length;
+
+							for (var i = 0; i < contents.length; i++){
+								// Is it a module or topic
+								if (contents[i].type == 0){
+									topics._getModule(contents[i]);
+								} else {
+									topics._getTopic(contents[i]);
+								}
+							}
+						});
+					}
+
+					valence.discussion.getForums(function(p, forums){
+						if (forums.length > 0){
+							var total = forums.length;
+							var spot = 0;
+							var result = [];
+							for (var i = 0; i < forums.length; i++){
+								valence.discussion.getTopics(forums[i].ForumId, function(p, forumTopics){
+									if (forumTopics.length > 0){
+										var r = [];
+										for (var j = 0; j < forumTopics.length; j++){
+											r.push({
+												id: forumTopics[j].TopicId,
+												start: forumTopics[j].StartDate,
+												end: forumTopics[j].EndDate,
+												unlock: {
+													start: forumTopics[j].UnlockStartDate,
+													end: forumTopics[j].UnlockEndDate
+												},
+												name: forumTopics[j].Name
+											})
+										}
+										result = result.concat(r);
+									}
+									if (++spot == total){
+										getTheRest(result);
+									}
+								})
+							}
+						}
+						else{
+							getTheRest(null);
+						}
+					});
+				})
+			})
+		})
+	})
 }
 
 /**
@@ -4006,6 +4558,19 @@ Topics.prototype.getModules = function(noKeep){
 }
 
 /**
+ * @name Topics.clearDate
+ * @description Clear the dates for all the selected items
+ * @todo
+ *  + Clear the dates
+ */
+Topics.prototype.clearDates = function(){
+	var toggled = this.getToggled();
+	for (var i = 0; i < toggled.length; i++){
+		toggled[i].clearDates();
+	}
+}
+
+/**
  * @name  Topics.render
  * @todo
  *  + Render the html table
@@ -4019,25 +4584,29 @@ Topics.prototype.render = function(){
 	var _this = this;
 
 	this.table.change(function(idx, val){
-		_this.items[parseInt(idx)].change = Boolean(val);
-	}, function(topics){
+		_this.items[parseInt(idx)].change = Boolean(val); // single
+	}, function(topics){ // all
 		// var offset = $('#offset').val();
 		// if (offset.length > 0){
 		// 	_this.offsetAll(parseInt(offset));
 		// }
 
-		var total = 0;
 		var spot = 0;
-	  for (var i = 0; i < _this.items.length; i++){
-	    if (_this.items[i].post){
-	    	total++;
-	    	_this.items[i].save(function(){
-	    		if (++spot == total){
-	    			UI.alert("Saved");
-	    		}
-	    	});
-	    }
-	  } 
+
+		var toggled = _this.getToggled();
+		var total = toggled.length;
+		for (var i = 0; i < toggled.length; i++){
+			if (toggled[i].post){
+				toggled[i].save(function(){
+					if (++spot == total){
+						_this.loading.stop();
+						UI.alert('Saved');
+					}
+				})
+				toggled[i].setChecked(false);
+				toggled[i].draw();
+			}
+		}
 
 	});
 
@@ -4046,129 +4615,9 @@ Topics.prototype.render = function(){
 /**
  * @end
  */
-
 if (valence.success){
-	Topics.getAll(function(topics){
-	  window.topics = topics;
-	  topics.render();
-	})
+    Topics.getAll(function(topics){
+      window.topics = topics;
+      topics.render();
+    })
 }
-/**
- * @start UI
- */
-function Table(){
-	this.html = $('<button class="ui button" id="change">Change</button><button class="ui button" id="toggle">Toggle All</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"><input placeholder="Filter..." id="filter"></div><table id="1231231231" class="ui compact celled definition table"><thead><tr><th>Change</th><th>Name</th><th>Start Date</th><th>End Date</th><th>Due Date</th><th>Path</th><th>Type</th></tr></thead><tbody></tbody></table>');
-	this.topics = [];
-}
-
-/**
- * @name  Table.draw
- * @todo
- *  - Toggle on / off
- */
-Table.prototype.draw = function(){
-	$('body').find('#1231231231').remove();
-	$('body').append(this.html);
-	$('table').tablesort().find('th').css({
-		cursor: 'pointer',
-		textDecoration: 'underline'
-	});
-	$('body').append('<style>th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"} .picker-hidden{display:none;}</style>');
-
-	var _this = this;
-	$('.change').on('change', function(){
-		var val = $(this).val();
-		_this.single($(this).attr('idx'), val);
-	})
-
-	$('#change').click(function(){
-		_this.all(_this.topics);
-	});
-
-	$('#toggle').click(function(){
-		var total = 0;
-		for (var i = 0; i < _this.topics.length; i++){
-			if (_this.topics[i].change){
-				total++;
-			}
-		}
-		var on = (total / _this.topics.length < 1 || total == 0);
-		for (var i = 0; i < _this.topics.length; i++){
-			_this.topics[i].change = on;
-			$('[idx=' + _this.topics[i].idx + ']')[0].checked = on;
-		}
-	});
-
-	$('#filter').keypress(function(e){
-		var val = $(this).val();
-		$('#1231231231 td').tableFilter({
-			text: val,
-			parent: 'tr'
-		});
-	})
-
-	$('.changeDate').picker();
-}
-
-/**
- * @Table.change
- * @todo
- *  + Set the callbacks to a local public variable
- */
-Table.prototype.change = function(single, all){
-	this.single = single;
-	this.all = all;
-}
-
-Table.prototype.addRow = function(topic, idx){
-	this.topics.push(topic);
-	topic.idx = idx;
-	var tmp = this.html.find('tbody').append('<tr id="tmp"></tr>').find('#tmp').removeAttr('id');
-	$(tmp).prop('topic', topic);
-	topic.ele = tmp[0];
-	$(tmp).append('<td class=collapsing><div class="ui fitted slider checkbox"><input type="checkbox" class="change" idx="' + idx + '" ' + (topic.change ? 'checked' : '') + '><label></label></div></td>');
-	$(tmp).append('<td>' + topic.title + '</td>');
-	//$(tmp).append('<td>' + (topic.isModule ? 'Module' : 'Topic') + '</td>');
-	if (topic.start) $(tmp).append('<td class="changeDate">' + moment(topic.start).local('en').format('MMM DD YYYY') + '</td>');
-	else $(tmp).append('<td class="changeDate"></td>');
-	if (topic.end) $(tmp).append('<td class="changeDate">' + moment(topic.end).local('en').format('MMM DD YYYY') + '</td>');
-	else $(tmp).append('<td class="changeDate"></td>');
-	if (topic.duedate) $(tmp).append('<td class="changeDate">' + moment(topic.duedate).local('en').format('MMM DD YYYY') + '</td>');
-	else $(tmp).append('<td class="changeDate"></td>');
-	$(tmp).append('<td class="changeDate">' + topic.path + '</td>');
-	$(tmp).append('<td class="changeDate">' + topic.type + '</td>');
-}
-
-function Loading(){
-	this.html = $('<div class="ui segment" id="loader"><div class="ui active dimmer"><div class="ui indeterminate text loader">Preparing Files</div></div><p></p></div>');
-}
-
-Loading.prototype.start = function(){
-	this.stop();
-	$('body').append(this.html);
-	$('#loader').css({
-		position: 'absolute',
-		left: 0,
-		right: 0,
-		top: 0,
-		bottom: 0
-	})
-}
-
-Loading.prototype.stop = function(){
-	$('#loader').remove();
-}
-
-var UI = {
-	alert: function(msg){
-		var html = $('<div class="ui modal" id="modal"><i class="close icon"></i><div class=header>' + msg + '</div><div class=actions><div class="ui positive right labeled icon button">Ok <i class="checkmark icon"></i></div></div></div>');
-		$('body').append(html);
-		$('#modal').modal('toggle', function(){
-			$('#modal').remove();
-		}).modal('show');
-	}
-}
-
-/**
- * @end
- */

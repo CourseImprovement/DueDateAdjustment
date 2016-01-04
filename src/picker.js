@@ -51,6 +51,30 @@ $.fn.picker = function(params){
 		this.selectedDay = new Date();
 	}
 
+	var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+	function createMonthDropDown(html){
+		var filter = '<input type="hidden" name="filters">';
+		var menu = $('<div class="menu"><div class="ui icon search input"><i class="search icon"></i><input type="text" placeholder="Search months..."></div><div class="divider"></div><div class="scrolling menu"></div></div>');
+		var m = $(menu).find('.scrolling');
+		for (var i = 0; i < months.length; i++){
+			$(m).append('<div class="item" data-value="' + months[i] + '">' + months[i] + '</div>');
+		}
+		$(html).find('#monthDropDown').addClass('ui').addClass('dropdown').append(filter).append(menu);
+		return html;
+	}
+
+	function createYearDropDown(html, date){
+		var filter = '<input type="hidden" name="filters">';
+		var menu = $('<div class="menu"><div class="ui icon search input"><i class="search icon"></i><input type="text" placeholder="Search years..."></div><div class="divider"></div><div class="scrolling menu"></div></div>');
+		var m = $(menu).find('.scrolling');
+		for (var i = -2; i < 7; i++){
+			$(m).append('<div class="item" data-value="' + (date.getFullYear() + i) + '">' + (date.getFullYear() + i) + '</div>');
+		}
+		$(html).find('#yearDropDown').addClass('ui').addClass('dropdown').append(filter).append(menu);
+		return html;
+	}
+
 	Calendar.prototype.render = function(x, y){
 		$('.picker-table').remove();
 		this.raw = '<div class="picker-table"><table class="ui celled striped table"><thead><tr class="picker-dayNames"></tr></thead><tbody></tbody></table></div>';
@@ -109,11 +133,29 @@ $.fn.picker = function(params){
 		var grid = $(this.table).prepend('<div class="ui center aligned grid picker-header" id="tmp"></div>').find('#tmp').removeAttr('id');
 		grid.append('<div class="left floated left aligned four wide column"><a class="ui button picker-back" style="padding: 4px 20px"><</a></div>');
 		var html = '<div class="eight wide column">';
-		html += '<a href="#" style="padding: 4px 7px">' + moment(this.selectedDay).format('MMMM') + '</a>';
-		html += '<a href="#" style="padding: 4px 7px">' + this.selectedDay.getFullYear() + '</a>';
+		html += '<div id="monthDropDown"><span class="text" style="padding: 4px 7px">' + moment(this.selectedDay).format('MMMM') + '</span></div>';
+		html += '<div id="yearDropDown"><span class="text" style="padding: 4px 7px">' + this.selectedDay.getFullYear() + '</span></div>';
 		html += '</div>';
 		grid.append(html);
+		grid = $(createMonthDropDown(grid));
+		grid = $(createYearDropDown(grid, this.selectedDay));
 		grid.append('<div class="right floated right aligned four wide column"><a class="ui button picker-forward" style="padding: 4px 20px; margin: 0;">></a></div>');
+		var _this = this;
+		grid.find('#monthDropDown').dropdown({
+			action: 'hide',
+			onChange: function(value){
+				var idx = months.indexOf(value);
+				_this.selectedDay = new Date(_this.selectedDay.getFullYear(), idx, 1);
+				_this.render(_this.x, _this.y);	
+			}
+		});
+		grid.find('#yearDropDown').dropdown({
+			action: 'hide',
+			onChange: function(value){
+				_this.selectedDay = new Date(parseInt(value), _this.selectedDay.getMonth(), 1);
+				_this.render(_this.x, _this.y);	
+			}
+		});
 	}
 
 	Calendar.prototype.setNames = function(){

@@ -2,7 +2,7 @@
  * @start UI
  */
 function Table(){
-	this.html = $('<button class="ui button" id="change">Change</button><button class="ui button" id="toggle">Toggle All</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"><input placeholder="Filter..." id="filter"></div><table id="1231231231" class="ui compact celled definition table"><thead><tr><th>Change</th><th>Name</th><th>Start Date</th><th>End Date</th><th>Due Date</th><th>Path</th><th>Type</th></tr></thead><tbody></tbody></table>');
+	this.html = $('<button class="ui button green" id="change">Submit</button><button class="ui button" id="OffsetDates">Set Offset</button><button class="ui button" id="toggle">Toggle All</button><button class="ui button" id="toggleAllWithDates">Toggle All With Dates</button><button class="ui button red" id="ClearDates">Clear Dates</button><div class="ui input"><input placeholder="Offset Amount" id="offset" value="180"><input placeholder="Filter..." id="filter"></div><table id="1231231231" class="ui compact celled definition table striped"><thead><tr><th>Change</th><th>Name</th><th>Start Date</th><th>End Date</th><th>Due Date</th><th>Path</th><th>Type</th></tr></thead><tbody></tbody></table>');
 	this.topics = [];
 }
 
@@ -18,7 +18,7 @@ Table.prototype.draw = function(){
 		cursor: 'pointer',
 		textDecoration: 'underline'
 	});
-	$('body').append('<style>th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"} .picker-hidden{display:none;}</style>');
+	$('body').append('<style>.ui.modal{top:4% !important;}th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"} .picker-hidden{display:none;}.filter-table .quick{margin-left:.5em;font-size:.8em;text-decoration:none}.fitler-table .quick:hover{text-decoration:underline}td.alt{background-color:#ffc;background-color:rgba(255,255,0,.2)}</style>');
 
 	var _this = this;
 	$('.change').on('change', function(){
@@ -27,8 +27,18 @@ Table.prototype.draw = function(){
 	})
 
 	$('#change').click(function(){
+		topics.loading.start();
 		_this.all(_this.topics);
 	});
+
+	$('#OffsetDates').click(function(){
+		var amount = $('#offset').val();
+		_this.offsetDates(parseInt(amount));
+	});
+
+	$('#ClearDates').click(function(){
+		window.topics.clearDates();
+	})
 
 	$('#toggle').click(function(){
 		var total = 0;
@@ -39,20 +49,37 @@ Table.prototype.draw = function(){
 		}
 		var on = (total / _this.topics.length < 1 || total == 0);
 		for (var i = 0; i < _this.topics.length; i++){
-			_this.topics[i].change = on;
-			$('[idx=' + _this.topics[i].idx + ']')[0].checked = on;
+			_this.topics[i].setChecked(on);
 		}
 	});
 
-	$('#filter').keypress(function(e){
-		var val = $(this).val();
-		$('#1231231231 td').tableFilter({
-			text: val,
-			parent: 'tr'
-		});
+	$('#toggleAllWithDates').click(function(){
+		var total = 0;
+		var len = 0;
+		for (var i = 0; i < _this.topics.length; i++){
+			if (_this.topics[i].hasDates()) len++;
+			if (_this.topics[i].hasDates() && _this.topics[i].change){
+				total++;
+			}
+		}
+		var on = (total / len < 1 || total == 0);
+		for (var i = 0; i < _this.topics.length; i++){
+			if (_this.topics[i].hasDates()) _this.topics[i].setChecked(on);
+		}
 	})
 
+	$('#1231231231').filterTable({inputSelector: '#filter'});
 	$('.changeDate').picker();
+}
+
+/**
+ * @name Table.offsetDates
+ * @assign Chase
+ * @todo
+ *  + API call to the topics prototype function
+ */
+Table.prototype.offsetDates = function(amount){
+	window.topics.uiOffsetActiveDates(amount);
 }
 
 /**
@@ -80,12 +107,17 @@ Table.prototype.addRow = function(topic, idx){
 	else $(tmp).append('<td class="changeDate"></td>');
 	if (topic.duedate) $(tmp).append('<td class="changeDate">' + moment(topic.duedate).local('en').format('MMM DD YYYY') + '</td>');
 	else $(tmp).append('<td class="changeDate"></td>');
-	$(tmp).append('<td class="changeDate">' + topic.path + '</td>');
-	$(tmp).append('<td class="changeDate">' + topic.type + '</td>');
+	$(tmp).append('<td>' + topic.path + '</td>');
+	$(tmp).append('<td>' + topic.type + '</td>');
+	$(tmp).find('.change').change(function(e){
+		var val = $(this).val() == 'on';
+		topic.post = val;
+		topic.change = val;
+	})
 }
 
 function Loading(){
-	this.html = $('<div class="ui segment" id="loader"><div class="ui active dimmer"><div class="ui indeterminate text loader">Preparing Files</div></div><p></p></div>');
+	this.html = '<div class="ui segment" id="loader"><div class="ui active dimmer"><div class="ui indeterminate text loader">Preparing Files</div></div><p></p></div>';
 }
 
 Loading.prototype.start = function(){

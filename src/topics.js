@@ -14,6 +14,11 @@ function Topics(){
 	this.total = 0;
 	this.table = new Table();
 	this.requestId = 1;
+	this.dropboxes = [];
+	this.checklist = [];
+	this.surveys = [];
+	this.quizzes = [];
+	this.discussions = [];
 	this.loading = new Loading();
 }
 
@@ -31,6 +36,107 @@ Topics.prototype.setCurrent = function(){
 }
 
 /**
+ * @name  Topics.uiOffsetActiveDates
+ * @description Offset the active dates
+ * @assign Chase
+ * @todo
+ *  + Update the UI (Chase)
+ *  + Offset only the toggled on dates (Chase)
+ *  + Update the Topic object (Chase)
+ */
+Topics.prototype.uiOffsetActiveDates = function(amount){
+	var toggled = this.getToggled();
+	for (var i = 0; i < toggled.length; i++){
+		toggled[i].setOffset(amount);
+		toggled[i].draw();
+	}
+}
+
+/**
+ * @name  Topics.getToggled
+ * @description returns the toggled dates
+ * @todo
+ *  - Return the toggled dates (Chase)
+ */
+Topics.prototype.getToggled = function(){
+	var result = [];
+	for (var i = 0; i < this.items.length; i++){
+		if (this.items[i].post) result.push(this.items[i]);
+	}
+	return result;
+}
+
+/**
+ * @name  Topics.getDropboxByName
+ * @description See the title
+ * @todo
+ *  + Go through the dropboxes and find the one matching the name
+ */
+Topics.prototype.getDropboxByName = function(name){	
+	for (var i = 0; i < this.dropboxes.length; i++){
+		if (this.dropboxes[i].Name == name){
+			return this.dropboxes[i];
+		}
+	}
+}
+
+/**
+ * @name Topics.getQuizByName
+ * @description A quick and dirty way to get the quiz ids
+ * @todo
+ *  + loop through and find the matching quiz
+ */
+Topics.prototype.getQuizByName = function(name){
+	for (var i = 0; i < this.quizzes.length; i++){
+		if (this.quizzes[i].name == name) return this.quizzes[i];
+	}
+}
+
+/**
+ * @name Topics.getSurveyByName
+ * @description A quick and dirty way to get the survey ids
+ * @todo
+ *  + loop through and find the matching survey
+ */
+Topics.prototype.getSurveyByName = function(name){
+	for (var i = 0; i < this.surveys.length; i++){
+		if (this.surveys[i].name == name) return this.surveys[i];
+	}
+}
+
+/**
+ * @name Topics.getDiscussionByName
+ * @description A quick and dirty way to get the discussion ids
+ * @todo
+ *  + loop through and find the matching discussion
+ */
+Topics.prototype.getDiscussionByName = function(name){
+	for (var i = 0; i < this.discussions.length; i++){
+		if (this.discussions[i].name == name) return this.discussions[i];
+	}
+}
+
+/**
+ * @name Topics.getChecklistByName
+ * @description A quick and dirty way to get the discussion ids
+ * @todo
+ *  + loop through and find the matching discussion
+ */
+Topics.prototype.getChecklistByName = function(name){
+	for (var i = 0; i < this.checklist.length; i++){
+		if (this.checklist[i].name == name) return this.checklist[i];
+	}
+}
+
+Topics.prototype.devStart = function(){
+	var d = new Date();
+	for (var i = 0; i < this.items.length; i++){
+		this.items[i].setStart(d);
+		this.items[i].draw();
+	}
+}
+
+/**
  * @name Topics.getAll 
  * @description Takes an array of modules to be parsed and returns an array with all the modules (no modules within modules) and the topics
  * @assign Chase and Grant
@@ -42,27 +148,78 @@ Topics.prototype.setCurrent = function(){
  *  + Get each module and topic
  */
 Topics.getAll = function(callback){
-	valence.content.getToc(function(path, toc){
-		var contents = [];
-		var topics = new Topics();
-		topics.loading.start();
-		topics.done = callback;
-		// Loop through each module
-		for (var i = 0; i < toc.Modules.length; i++){
-			contents = contents.concat(topics.getModuleRecursive(toc.Modules[i], ''));
-		}
+	var _this = this;
+	var topics = new Topics();
+	topics.loading.start();
+	valence.checklist.getAll(function(checklist){
+		valence.dropbox.getFolder(function(a, b){
+			valence.quiz.getAll(function(quizzes){
+				valence.survey.getAll(function(surveys){
 
-		topics.total = contents.length;
+					function getTheRest(discussions){
+						valence.content.getToc(function(path, toc){
+							var contents = [];
+							topics.dropboxes = b;
+							topics.quizzes = quizzes;
+							topics.surveys = surveys;
+							topics.discussions = discussions;
+							topics.checklist = checklist;
+							topics.done = callback;
+							// Loop through each module
+							for (var i = 0; i < toc.Modules.length; i++){
+								contents = contents.concat(topics.getModuleRecursive(toc.Modules[i], ''));
+							}
 
-		for (var i = 0; i < contents.length; i++){
-			// Is it a module or topic
-			if (contents[i].type == 0){
-				topics._getModule(contents[i]);
-			} else {
-				topics._getTopic(contents[i]);
-			}
-		}
-	});
+							topics.total = contents.length;
+
+							for (var i = 0; i < contents.length; i++){
+								// Is it a module or topic
+								if (contents[i].type == 0){
+									topics._getModule(contents[i]);
+								} else {
+									topics._getTopic(contents[i]);
+								}
+							}
+						});
+					}
+
+					valence.discussion.getForums(function(p, forums){
+						if (forums.length > 0){
+							var total = forums.length;
+							var spot = 0;
+							var result = [];
+							for (var i = 0; i < forums.length; i++){
+								valence.discussion.getTopics(forums[i].ForumId, function(p, forumTopics){
+									if (forumTopics.length > 0){
+										var r = [];
+										for (var j = 0; j < forumTopics.length; j++){
+											r.push({
+												id: forumTopics[j].TopicId,
+												start: forumTopics[j].StartDate,
+												end: forumTopics[j].EndDate,
+												unlock: {
+													start: forumTopics[j].UnlockStartDate,
+													end: forumTopics[j].UnlockEndDate
+												},
+												name: forumTopics[j].Name
+											})
+										}
+										result = result.concat(r);
+									}
+									if (++spot == total){
+										getTheRest(result);
+									}
+								})
+							}
+						}
+						else{
+							getTheRest(null);
+						}
+					});
+				})
+			})
+		})
+	})
 }
 
 /**
@@ -174,6 +331,19 @@ Topics.prototype.getModules = function(noKeep){
 }
 
 /**
+ * @name Topics.clearDate
+ * @description Clear the dates for all the selected items
+ * @todo
+ *  + Clear the dates
+ */
+Topics.prototype.clearDates = function(){
+	var toggled = this.getToggled();
+	for (var i = 0; i < toggled.length; i++){
+		toggled[i].clearDates();
+	}
+}
+
+/**
  * @name  Topics.render
  * @todo
  *  + Render the html table
@@ -187,25 +357,29 @@ Topics.prototype.render = function(){
 	var _this = this;
 
 	this.table.change(function(idx, val){
-		_this.items[parseInt(idx)].change = Boolean(val);
-	}, function(topics){
+		_this.items[parseInt(idx)].change = Boolean(val); // single
+	}, function(topics){ // all
 		// var offset = $('#offset').val();
 		// if (offset.length > 0){
 		// 	_this.offsetAll(parseInt(offset));
 		// }
 
-		var total = 0;
 		var spot = 0;
-	  for (var i = 0; i < _this.items.length; i++){
-	    if (_this.items[i].post){
-	    	total++;
-	    	_this.items[i].save(function(){
-	    		if (++spot == total){
-	    			UI.alert("Saved");
-	    		}
-	    	});
-	    }
-	  } 
+
+		var toggled = _this.getToggled();
+		var total = toggled.length;
+		for (var i = 0; i < toggled.length; i++){
+			if (toggled[i].post){
+				toggled[i].save(function(){
+					if (++spot == total){
+						_this.loading.stop();
+						UI.alert('Saved');
+					}
+				})
+				toggled[i].setChecked(false);
+				toggled[i].draw();
+			}
+		}
 
 	});
 
@@ -214,10 +388,9 @@ Topics.prototype.render = function(){
 /**
  * @end
  */
-
 if (valence.success){
-	Topics.getAll(function(topics){
-	  window.topics = topics;
-	  topics.render();
-	})
+    Topics.getAll(function(topics){
+      window.topics = topics;
+      topics.render();
+    })
 }

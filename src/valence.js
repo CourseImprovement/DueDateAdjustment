@@ -1,4 +1,4 @@
-/**
+ /*
  * @start object valence
  * @name  Valence
  * @description A lightweight api collection for Valence
@@ -11,7 +11,7 @@
  */
 var valence = (function(){
 
-    var href = $('script[src*="courses.byui.edu"]').attr('src'); // get this file name
+    var href = $('script[src*="courses."]').attr('src'); // get this file name
     var props = {};
     var success = false;
 
@@ -129,12 +129,106 @@ var valence = (function(){
                 get(props.orgUnitId + '/content/topics/' + topicId, callback, '1.4', 'le');
             }
         },
+        dropbox: {
+            getFolder: function(callback){
+                get(props.orgUnitId + '/dropbox/folders/', callback, '1.4', 'le');
+            }
+        },
         org: {
             structure: function(callback){
                 get('orgstructure/', callback);
             },
             info: function(callback){
                 get('organization/info/', callback);
+            }
+        },
+        discussion: {
+            getForums: function(callback){
+                get(props.orgUnitId + '/discussions/forums/', callback, '1.4', 'le');
+            },
+            getTopics: function(forumId, callback){
+                get(props.orgUnitId + '/discussions/forums/' + forumId + '/topics/', callback, '1.4', 'le');
+            }
+        },
+        survey: {
+            getAll: function(callback){
+                $.get('/d2l/lms/survey/admin/surveys_manage.d2l?ou=' + props.orgUnitId, function(html){
+                    html = $(html);
+                    var result = [];
+                    $(html).find('[summary*="list of surveys"] tr:not([class]) th').each(function(){
+                        var id = $(this).find('a:first-child').attr('href').split('si=')[1].split('&')[0];
+                        var name = $(this).find('a:first-child').html();
+                        var dates = $(this).find('> div label span').text();
+                        var start = null;
+                        var end = null;
+                        if (dates != 'Always Available'){
+                            if (dates.indexOf(' - ') > -1){
+                                var ds = dates.split(' - ');
+                                start = new Date(ds[0]);
+                                end = new Date(ds[1]);
+                            }
+                            else if (dates.indexOf('Ends ') > -1){
+                                var d = dates.split('Ends ')[1];
+                                end = new Date(d);
+                            }
+                            else if (dates.indexOf('Begins ') > -1){
+                                var d = dates.split('Begins ')[1];
+                                start = new Date(d);
+                            }
+                        }
+                        result.push({id: id, name: name, start: start, end: end});
+                    });
+                    callback(result);
+                })
+            }
+        },
+        checklist: {
+            getAll: function(callback){
+                $.get('/d2l/lms/checklist/checklists.d2l?ou=' + props.orgUnitId, function(html){
+                    html = $(html);
+                    var result = [];
+                    $(html).find('[summary*="List of checklists"] tr:not([class]) th').each(function(){
+                        var id = $(this).find('a:first-child').attr('href').split('checklistId=')[1].split('&')[0];
+                        var name = $(this).find('a:first-child').text();
+                        result.push({
+                            id: id,
+                            name: name
+                        });
+                    });
+                    callback(result);
+                });
+            }
+        },
+        quiz: {
+            getAll: function(callback){
+                $.get('/d2l/lms/quizzing/admin/quizzes_manage.d2l?ou=' + props.orgUnitId, function(html){
+                    html = $(html);
+                    var result = [];
+                    $(html).find('[summary*="list of quizzes"] tr:not([class]) th').each(function(){
+                        var id = $(this).find('a:first-child').attr('href').split('qi=')[1].split('&')[0];
+                        var name = $(this).find('a:first-child').html();
+                        var dates = $(this).find('> div label span').text();
+                        var start = null;
+                        var end = null;
+                        if (dates != 'Always Available'){
+                            if (dates.indexOf(' - ') > -1){
+                                var ds = dates.split(' - ');
+                                start = new Date(ds[0]);
+                                end = new Date(ds[1]);
+                            }
+                            else if (dates.indexOf('Ends ') > -1){
+                                var d = dates.split('Ends ')[1];
+                                end = new Date(d);
+                            }
+                            else if (dates.indexOf('Begins ') > -1){
+                                var d = dates.split('Begins ')[1];
+                                start = new Date(d);
+                            }
+                        }
+                        result.push({id: id, name: name, start: start, end: end});
+                    });
+                    callback(result);
+                });
             }
         },
         tools: {
