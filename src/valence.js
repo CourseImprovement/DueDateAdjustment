@@ -1,3 +1,30 @@
+function Loading(){
+    this.top = '<div class="ui segment" id="loader"><div class="ui active dimmer"><div class="ui indeterminate text loader" id="top">Preparing Files</div></div><p></p></div>';
+    this.middle = '<div class="ui segment" id="loader"><div class="ui active dimmer"><div class="ui indeterminate text loader">Preparing Files</div></div><p></p></div>';
+}
+
+Loading.prototype.start = function(top){
+    this.stop();
+    $('body').append((top ? this.top : this.middle));
+    $('#loader').css({
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        zIndex: 999
+    });
+}
+
+Loading.prototype.stop = function(){
+    $('#loader').remove();
+}
+
+var loading = new Loading();
+setTimeout(function(){
+    loading.start(true);
+}, 4);
+
  /*
  * @start object valence
  * @name  Valence
@@ -11,7 +38,9 @@
  */
 var valence = (function(){
 
-    var href = $('script[src*="courses."]').attr('src'); // get this file name
+    //var href = $('script[src*="courses."]').attr('src'); // get this file name
+    //var href = window.location.href;
+    var href = $('script[src*="duedateadjustment.js"]').attr('src');    
     var props = {};
     var success = false;
 

@@ -1,3 +1,6 @@
+/**
+ * We created a custom date picker becuase I couldn't find one for semantic
+ */
 $.fn.picker = function(params){
 	var eles = $(this);
 
@@ -75,12 +78,64 @@ $.fn.picker = function(params){
 		return html;
 	}
 
+	function formatTime(date){
+		var hours = date.getHours();
+		var minutes = date.getMinutes();
+		var ampm = hours >= 12 ? 'PM' : 'AM';
+		if (hours > 12) hours = hours % 12;
+		if (hours == 0) hours = 12;
+		if (minutes != 0 && minutes != 30) minutes = '00';
+		if (minutes == 0) minutes = '00';
+		return hours + ':' + minutes + ' ' + ampm;
+	}
+
+	Calendar.prototype.setActiveDay = function(){
+		var day = this.selectedDay.getDate() + '';
+		$(this.table).find('.day.active').removeClass('active');
+		$(this.table).find('table .day').each(function(){
+			if ($(this).text() == day) $(this).addClass('active');
+		});
+	}
+
+	Calendar.prototype.initTime = function(){
+		var hours = this.selectedDay.getHours();
+		var minutes = this.selectedDay.getMinutes();
+		var ampm = hours >= 12 ? 'pm' : 'am';
+		if (hours > 12) hours = hours % 12;
+		if (hours == 0) hours = 12;
+		return hours + ':' + minutes + ampm;
+	}
+
 	Calendar.prototype.render = function(x, y){
 		$('.picker-table').remove();
-		this.raw = '<div class="picker-table"><table class="ui celled striped table"><thead><tr class="picker-dayNames"></tr></thead><tbody></tbody></table></div>';
+		this.raw = '<div class="picker-table"><div id="time"><h2>Time</h2><div class="ui input"><input type="text" value="' + this.initTime() + '" id="datePickerTime"></div></div><table class="ui celled striped table"><thead><tr class="picker-dayNames"></tr></thead><tbody></tbody></table></div>';
 		this.table = $(this.raw);
+		$(this.table).find('#timeDropdown').dropdown({
+			action: 'hide',
+			onChange: function(value){
+				var split = value.split(':');
+				var hrs = parseInt(split[0]);
+				var pm = value.indexOf('PM') > -1;
+				hrs = pm ? hrs + 12 : hrs;
+				var mins = parseInt(split[1].split(' ')[0]);
+				_this.selectedDay = new Date(_this.selectedDay.getFullYear(), _this.selectedDay.getMonth(), 1, hrs, mins, 0);
+				_this.render(_this.x, _this.y);	
+				
+				var topic = $(_this.ele).parent().prop('topic');
+				var idx = $(_this.ele).index();
+				var type = '';
+				switch (idx){
+					case 2: {type = 'start'; break;}
+					case 3: {type = 'end'; break;}
+					case 4: {type = 'duedate'; break;}
+				}
+				$('.picker-table').remove();
+				topic.setDate(type, _this.selectedDay);
+				$(_this.ele).html(moment(topic[type]).local('en').format('MMM DD YYYY hh:mm a'));
+			}
+		});
 		if ($('.picker-table-style').length == 0){
-			var style = '*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}.picker-table{position:absolute;-webkit-box-shadow:0 0 16px rgba(0,0,14,.77);-moz-box-shadow:0 0 16px rgba(0,0,14,.77);box-shadow:0 0 16px rgba(0,0,14,.77);left:10px;-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;background-color:#fff;width:327px}.picker-table .picker-header{padding-top:10px}.picker-table td,.picker-table th{text-align:center!important}.picker-table td:hover{background-color:#3B69A8;cursor:pointer;color:#fff}.picker-table td.selected{background-color:rgba(59,105,168,.46)}';
+			var style = '#time{text-align:center;position:absolute;top:0;right:-160px;width:157px;background-color:white;-webkit-box-shadow:0 0 16px rgba(0,0,14,.77);-moz-box-shadow:0 0 16px rgba(0,0,14,.77);box-shadow:0 0 16px rgba(0,0,14,.77);}*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}.picker-table{position:absolute;-webkit-box-shadow:0 0 16px rgba(0,0,14,.77);-moz-box-shadow:0 0 16px rgba(0,0,14,.77);box-shadow:0 0 16px rgba(0,0,14,.77);left:10px;-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;background-color:#fff;width:327px}.picker-table .picker-header{padding-top:10px}.picker-table td,.picker-table th{text-align:center!important}.picker-table td:hover{background-color:#3B69A8;cursor:pointer;color:#fff}.picker-table td.selected{background-color:rgba(59,105,168,.46)}';
 			$('head').append('<style class="picker-table-style">' + style + '</style>');
 		}
 		this.x = x;
@@ -88,6 +143,7 @@ $.fn.picker = function(params){
 		this.setHeader();
 		this.setNames();
 		this.setDays();
+		this.setActiveDay();
 		$(this.table).css({
 			left: (x - 225) + 'px',
 			top: y + 'px'
@@ -111,6 +167,23 @@ $.fn.picker = function(params){
 		$('.day').click(function(){
 			if ($(this).html() == "&nbsp;") return false;
 			var cal = this.cal;
+			var timeVal = $('#datePickerTime').val();
+			function internalSetTime(){
+				if (timeVal && timeVal.length > 2){
+					var hours = timeVal.match(/[0-9]{1,}(?=\:)/g);
+					var minutes = timeVal.match(/[0-9]{1,}(?=[a-zA-Z]{2})/g);
+					var ampm = timeVal.match(/[a-zA-Z]{2}/g);
+					if (!hours || hours.length != 1 ||
+							!minutes || minutes.length != 1 ||
+							!ampm || ampm.length != 1) return;
+					cal.hour = parseInt(hours[0]);
+					if (ampm[0] == 'am' && cal.hour == 12) cal.hour = 0;
+					else if (ampm[0] == 'pm' && cal.hour != 12) cal.hour += 12;
+					cal.minutes = parseInt(minutes[0]);
+				}
+			}
+			internalSetTime();
+
 			var topic = $(_this.ele).parents('tr').prop('topic');
 			var idx = $(_this.ele).index();
 			var type = '';
@@ -121,7 +194,7 @@ $.fn.picker = function(params){
 			}
 			$('.picker-table').remove();
 			topic.offsetByCal(cal, type);
-			$(_this.ele).html(moment(topic[type]).local('en').format('MMM DD YYYY')); 
+			$(_this.ele).html(moment(topic[type]).local('en').format('MMM DD YYYY hh:mm a')); 
 		});
 
 		setTimeout(function(){

@@ -13,11 +13,6 @@ function Topic(obj, topics){
   this.change = false;
   this.post = false;
   this.path = this.obj.path;
-
-  if (this.title == 'Banana'){
-    var a = 10;
-  }
-
   this.type = (function(o){
     if (o.Url && o.Url.indexOf('&type=') > -1){
       var split = o.Url.split('&type=')[1];
@@ -103,11 +98,11 @@ Topic.prototype.setOffset = function(amount, type){
  *  + Update the dates (Chase)
  */
 Topic.prototype.draw = function(){
-  if (this.start) $(this.ele).find('td:nth-child(3)').text(moment(this.start).local('en').format('MMM DD YYYY'));
+  if (this.start) $(this.ele).find('td:nth-child(3)').text(moment(this.start).local('en').format('MMM DD YYYY hh:mm a'));
   else $(this.ele).find('td:nth-child(3)').text('');
-  if (this.end) $(this.ele).find('td:nth-child(4)').text(moment(this.end).local('en').format('MMM DD YYYY'));
+  if (this.end) $(this.ele).find('td:nth-child(4)').text(moment(this.end).local('en').format('MMM DD YYYY hh:mm a'));
   else $(this.ele).find('td:nth-child(4)').text('');
-  if (this.duedate) $(this.ele).find('td:nth-child(5)').text(moment(this.duedate).local('en').format('MMM DD YYYY'));
+  if (this.duedate) $(this.ele).find('td:nth-child(5)').text(moment(this.duedate).local('en').format('MMM DD YYYY hh:mm a'));
   else $(this.ele).find('td:nth-child(5)').text('');
 }
 
@@ -151,7 +146,7 @@ Topic.prototype.offsetByCal = function(cal, type){
   }
 
   var selectedDate = null;
-  var toDate = new Date(cal.year, cal.month, cal.day);
+  var toDate = new Date(cal.year, cal.month, cal.day, cal.hour, cal.minutes, 0);
 
   selectedDate = this[type];
 
@@ -165,6 +160,17 @@ Topic.prototype.offsetByCal = function(cal, type){
   else{
     var offset = difference(selectedDate, toDate);
     this.setOffset(offset, type);
+    this[type].setHours(cal.hour);
+    this[type].setMinutes(cal.minutes);
+  }
+  this.setChecked(true);
+}
+
+Topic.prototype.setDate = function(type, date){
+  switch (type){
+    case 'start': this.setStart(date); break;
+    case 'end': this.setEnd(date); break;
+    case 'duedate': this.setDueDate(date); break;
   }
   this.setChecked(true);
 }
@@ -227,6 +233,7 @@ Topic.prototype.error = function(msg){
   $(this.ele).css({backgroundColor: 'rgba(219, 40, 40, 0.35)'});
   if (this.issueWithDates()){
     $(this.ele).find('td:nth-child(3)').css({backgroundColor: 'rgba(219, 40, 40, 0.34)'});
+    loading.stop();
   }
 }
 

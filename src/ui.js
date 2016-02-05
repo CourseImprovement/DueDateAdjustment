@@ -18,7 +18,7 @@ Table.prototype.draw = function(){
 		cursor: 'pointer',
 		textDecoration: 'underline'
 	});
-	$('body').append('<style>.ui.modal{top:4% !important;}th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"} .picker-hidden{display:none;}.filter-table .quick{margin-left:.5em;font-size:.8em;text-decoration:none}.fitler-table .quick:hover{text-decoration:underline}td.alt{background-color:#ffc;background-color:rgba(255,255,0,.2)}</style>');
+	$('body').append('<style>#top{top: 48px !important;}.ui.modal{top:4% !important;}th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"} .picker-hidden{display:none;}.filter-table .quick{margin-left:.5em;font-size:.8em;text-decoration:none}.fitler-table .quick:hover{text-decoration:underline}td.alt{background-color:#ffc;background-color:rgba(255,255,0,.2)}</style>');
 
 	var _this = this;
 	$('.change').on('change', function(){
@@ -27,7 +27,7 @@ Table.prototype.draw = function(){
 	})
 
 	$('#change').click(function(){
-		topics.loading.start();
+		topics.loading.start(true);
 		_this.all(_this.topics);
 	});
 
@@ -37,7 +37,15 @@ Table.prototype.draw = function(){
 	});
 
 	$('#ClearDates').click(function(){
-		window.topics.clearDates();
+		UI.prompt('Password', function(val){
+			var input = '';
+			for (i=0; i < val.length; i++) {
+	     	input +=val[i].charCodeAt(0).toString(2) + " ";
+	    }
+			if (input == '1000011 1001001 1000100 1100001 1110100 1100101 1110011 '){
+				window.topics.clearDates();
+			}
+		})
 	})
 
 	$('#toggle').click(function(){
@@ -68,7 +76,15 @@ Table.prototype.draw = function(){
 		}
 	})
 
-	$('#1231231231').filterTable({inputSelector: '#filter'});
+	$('#1231231231').filterTable({
+		inputSelector: '#filter',
+		callback: function(term, tbl){
+			_this.topics = [];
+			$(tbl).find('tr:not(:has(>th))').each(function(){
+				if ($(this).hasClass('visible') && this.topic) _this.topics.push(this.topic);
+			})
+		}
+	});
 	$('.changeDate').picker();
 }
 
@@ -101,11 +117,11 @@ Table.prototype.addRow = function(topic, idx){
 	$(tmp).append('<td class=collapsing><div class="ui fitted slider checkbox"><input type="checkbox" class="change" idx="' + idx + '" ' + (topic.change ? 'checked' : '') + '><label></label></div></td>');
 	$(tmp).append('<td>' + topic.title + '</td>');
 	//$(tmp).append('<td>' + (topic.isModule ? 'Module' : 'Topic') + '</td>');
-	if (topic.start) $(tmp).append('<td class="changeDate">' + moment(topic.start).local('en').format('MMM DD YYYY') + '</td>');
+	if (topic.start) $(tmp).append('<td class="changeDate">' + moment(topic.start).local('en').format('MMM DD YYYY hh:mm a') + '</td>');
 	else $(tmp).append('<td class="changeDate"></td>');
-	if (topic.end) $(tmp).append('<td class="changeDate">' + moment(topic.end).local('en').format('MMM DD YYYY') + '</td>');
+	if (topic.end) $(tmp).append('<td class="changeDate">' + moment(topic.end).local('en').format('MMM DD YYYY hh:mm a') + '</td>');
 	else $(tmp).append('<td class="changeDate"></td>');
-	if (topic.duedate) $(tmp).append('<td class="changeDate">' + moment(topic.duedate).local('en').format('MMM DD YYYY') + '</td>');
+	if (topic.duedate) $(tmp).append('<td class="changeDate">' + moment(topic.duedate).local('en').format('MMM DD YYYY hh:mm a') + '</td>');
 	else $(tmp).append('<td class="changeDate"></td>');
 	$(tmp).append('<td>' + topic.path + '</td>');
 	$(tmp).append('<td>' + topic.type + '</td>');
@@ -116,32 +132,27 @@ Table.prototype.addRow = function(topic, idx){
 	})
 }
 
-function Loading(){
-	this.html = '<div class="ui segment" id="loader"><div class="ui active dimmer"><div class="ui indeterminate text loader">Preparing Files</div></div><p></p></div>';
-}
-
-Loading.prototype.start = function(){
-	this.stop();
-	$('body').append(this.html);
-	$('#loader').css({
-		position: 'absolute',
-		left: 0,
-		right: 0,
-		top: 0,
-		bottom: 0
-	})
-}
-
-Loading.prototype.stop = function(){
-	$('#loader').remove();
-}
-
 var UI = {
 	alert: function(msg){
 		var html = $('<div class="ui modal" id="modal"><i class="close icon"></i><div class=header>' + msg + '</div><div class=actions><div class="ui positive right labeled icon button">Ok <i class="checkmark icon"></i></div></div></div>');
 		$('body').append(html);
 		$('#modal').modal('toggle', function(){
 			$('#modal').remove();
+		}).modal('show');
+	},
+	prompt: function(msg, callback){
+		var html = $('<div class="ui modal" id="modal"><i class="close icon"></i><div class=header>' + msg + '</div><div class="content"><div class="ui input" style="width:100%;"><input type="password" id="prompt_input" placeholder="Password"></div></div><div class=actions><div class="ui approve button">OK</div><div class="ui cancel button">Cancel</div></div></div>');
+		$('body').append(html);
+		$('#modal').modal('toggle', function(){
+			$('#modal').remove();
+		}).modal({
+			onApprove: function(){
+				var val = $('#prompt_input').val();
+				callback(val);
+				setTimeout(function(){
+					$('#modal').remove();
+				}, 20);
+			}
 		}).modal('show');
 	}
 }
