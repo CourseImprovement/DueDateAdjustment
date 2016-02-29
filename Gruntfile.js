@@ -7,13 +7,17 @@ module.exports = function(grunt) {
         dest: 'build/duedateadjustment.js'
       },
       server: {
-        src: 'build/duedateadjustment.js',
+        src: 'build/newduedateadjustment.js',
         dest: '/Volumes/chase/duedateadjustment.js'
+      },
+      newBuild: {
+        src: ['new/lib/byui.js', 'new/ui.js', 'new/items.js', 'new/item.js', 'new/table.js', 'new/valence.js', 'new/init.js', 'new/lib/moment.js', 'new/lib/filter.js', 'new/lib/picker.js', 'new/lib/tablesort.js'],
+        dest: 'build/newduedateadjustment.js'
       }
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-concat');
 
-  grunt.registerTask('default', ['concat:norm', 'concat:server']);
+  grunt.registerTask('default', ['concat:newBuild', 'concat:server']);
 };  

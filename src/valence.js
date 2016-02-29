@@ -20,6 +20,10 @@ Loading.prototype.stop = function(){
     $('#loader').remove();
 }
 
+Loading.prototype.setText = function(txt){
+    $('.ui.indeterminate').text(txt);
+}
+
 var loading = new Loading();
 setTimeout(function(){
     loading.start(true);

@@ -20,6 +20,10 @@ Loading.prototype.stop = function(){
     $('#loader').remove();
 }
 
+Loading.prototype.setText = function(txt){
+    $('.ui.indeterminate').text(txt);
+}
+
 var loading = new Loading();
 setTimeout(function(){
     loading.start(true);
@@ -703,38 +707,40 @@ function Topic(obj, topics){
     }
   })(this.obj);
 
+  this.isContentPage = true;
+
   if (this.type == undefined) this.type = 'module';
 
   this._id = (this.obj.Id ? this.obj.Id : this.obj.TopicId);
 
-  if (this.type == 'dropbox'){
-    var dropbox = topics.getDropboxByName(this.title);
-    if (dropbox.Availability && dropbox.Availability.StartDate) this.start = dropbox.Availability.StartDate;
-    if (dropbox.Availability && dropbox.Availability.EndDate) this.end = dropbox.Availability.EndDate;
-    this._dropboxId = dropbox.Id;
-  }
-  else if (this.type == 'quiz'){
-    var quiz = topics.getQuizByName(this.title);
-    this._quizId = quiz.id;
-    this.start = quiz.start;
-    this.end = quiz.end;
-  }
-  else if (this.type == 'survey'){
-    var survey = topics.getSurveyByName(this.title);
-    this._surveyId = survey.id;
-    this.start = survey.start;
-    this.end = survey.end;
-  }
-  else if (this.type == 'discuss'){
-    var discuss = topics.getDiscussionByName(this.title);
-    this._discussId = discuss.id;
-    this.start = discuss.start;
-    this.end = discuss.end;
-  }
-  else if (this.type == 'checklist'){
-    var check = topics.getChecklistByName(this.title);
-    this._checklistId = check.id;
-  }
+  // if (this.type == 'dropbox'){
+  //   var dropbox = topics.getDropboxByName(this.title);
+  //   if (dropbox.Availability && dropbox.Availability.StartDate) this.start = dropbox.Availability.StartDate;
+  //   if (dropbox.Availability && dropbox.Availability.EndDate) this.end = dropbox.Availability.EndDate;
+  //   this._dropboxId = dropbox.Id;
+  // }
+  // else if (this.type == 'quiz'){
+  //   var quiz = topics.getQuizByName(this.title);
+  //   this._quizId = quiz.id;
+  //   this.start = quiz.start;
+  //   this.end = quiz.end;
+  // }
+  // else if (this.type == 'survey'){
+  //   var survey = topics.getSurveyByName(this.title);
+  //   this._surveyId = survey.id;
+  //   this.start = survey.start;
+  //   this.end = survey.end;
+  // }
+  // else if (this.type == 'discuss'){
+  //   var discuss = topics.getDiscussionByName(this.title);
+  //   this._discussId = discuss.id;
+  //   this.start = discuss.start;
+  //   this.end = discuss.end;
+  // }
+  // else if (this.type == 'checklist'){
+  //   var check = topics.getChecklistByName(this.title);
+  //   this._checklistId = check.id;
+  // }
 
   /**
    * Dateify the objects
@@ -765,6 +771,19 @@ Topic.prototype.setOffset = function(amount, type){
     this[type] = new Date(this[type].setDate(this[type].getDate() + amount));
   }
   this.post = true;
+}
+
+Topic.prototype.isEditable = function(){
+  return this.type.indexOf(' tool') == -1;
+}
+
+Topic.prototype.setEditable = function(){
+  var isEditable = this.isEditable();
+  if (!isEditable) {
+    $(this.ele).find('.checkbox').addClass('disabled');
+    $(this.ele).css('background-color', 'rgba(12, 15, 41, 0.59)');
+    $(this.ele).addClass('nyi');
+  }
 }
 
 /**
@@ -1008,25 +1027,26 @@ Topic.prototype.save = function(afterSaveCallback){
    */
   function createCallUrl(obj, topic){
     var type = getUrlType(topic);
+    if (type.indexOf(' tool')) type = type.replace(' tool', '');
     var url = '';
     if (topic.isModule){
       url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/module/' + topic._id + '/EditModuleRestrictions'
     } 
-    else if (topic.type == 'dropbox'){
-      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._dropboxId + '/UpdateRestrictions?topicId=' + topic._id;
-    }
-    else if (topic.type == 'quiz'){
-      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._quizId + '/UpdateRestrictions?topicId=' + topic._id;
-    }
-    else if (topic.type == 'survey'){
-      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._surveyId + '/UpdateRestrictions?topicId=' + topic._id;
-    }
-    else if (topic.type == 'discuss'){
-      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._discussId + '/UpdateRestrictions?topicId=' + topic._id; 
-    }
-    else if (topic.type == 'checklist'){
-      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._checklistId + '/UpdateRestrictions?topicId=' + topic._id; 
-    }
+    // else if (topic.type == 'dropbox tool'){
+    //   url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._dropboxId + '/UpdateRestrictions?topicId=' + topic._id;
+    // }
+    // else if (topic.type == 'quiz tool'){
+    //   url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._quizId + '/UpdateRestrictions?topicId=' + topic._id;
+    // }
+    // else if (topic.type == 'survey tool'){
+    //   url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._surveyId + '/UpdateRestrictions?topicId=' + topic._id;
+    // }
+    // else if (topic.type == 'discuss tool'){
+    //   url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._discussId + '/UpdateRestrictions?topicId=' + topic._id; 
+    // }
+    // else if (topic.type == 'checklist tool'){
+    //   url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._checklistId + '/UpdateRestrictions?topicId=' + topic._id; 
+    // }
     else {
       url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._id + '/UpdateRestrictions?topicId=' + topic._id;
     }
@@ -1075,7 +1095,7 @@ Table.prototype.draw = function(){
 		cursor: 'pointer',
 		textDecoration: 'underline'
 	});
-	$('body').append('<style>#top{top: 48px !important;}.ui.modal{top:4% !important;}th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"} .picker-hidden{display:none;}.filter-table .quick{margin-left:.5em;font-size:.8em;text-decoration:none}.fitler-table .quick:hover{text-decoration:underline}td.alt{background-color:#ffc;background-color:rgba(255,255,0,.2)}</style>');
+	$('body').append('<style>.nyi:after{content:"Not Yet Implemented";color: white;text-align:center;width:100%;background-color:rgba(0, 0, 0, 0.65);display:block;position:absolute;left:0;}#top{top: 48px !important;}.ui.modal{top:4% !important;}th.sorted.ascending:after{content:"  \\2191"}th.sorted.descending:after{content:" \\2193"} .picker-hidden{display:none;}.filter-table .quick{margin-left:.5em;font-size:.8em;text-decoration:none}.fitler-table .quick:hover{text-decoration:underline}td.alt{background-color:#ffc;background-color:rgba(255,255,0,.2)}</style>');
 
 	var _this = this;
 	$('.change').on('change', function(){
@@ -1186,7 +1206,8 @@ Table.prototype.addRow = function(topic, idx){
 		var val = $(this).val() == 'on';
 		topic.post = val;
 		topic.change = val;
-	})
+	});
+	topic.setEditable();
 }
 
 var UI = {
@@ -1355,6 +1376,91 @@ Topics.prototype.devStart = function(){
 	}
 }
 
+/** 
+ * @name  Topics.setToolItems
+ */
+Topics.prototype.setToolItems = function(){
+	for (var i = 0; i < this.discussions.length; i++){
+		var d = this.discussions[i];
+		var t = new Topic({
+			Id: d.id,
+			Title: d.name,
+			Type: '3',
+			StartDate: d.start,
+			EndDate: d.end
+		}, this);
+
+		t.type = 'discuss tool';
+		t.raw = d;
+		t.path = '';
+		this.items.push(t);
+	}
+	for (var i = 0; i < this.quizzes.length; i++){
+		var d = this.quizzes[i];
+		var t = new Topic({
+			Id: d.id,
+			Title: d.name,
+			Type: '3',
+			StartDate: d.start,
+			EndDate: d.end
+		}, this);
+
+		t.type = 'quiz tool';
+		t.raw = d;
+		t.path = '';
+		this.items.push(t);
+	}
+
+	for (var i = 0; i < this.surveys.length; i++){
+		var d = this.surveys[i];
+		var t = new Topic({
+			Id: d.id,
+			Title: d.name,
+			Type: '3',
+			StartDate: d.start,
+			EndDate: d.end
+		}, this);
+
+		t.type = 'survey tool';
+		t.raw = d;
+		t.path = '';
+		this.items.push(t);
+	}
+
+	for (var i = 0; i < this.checklist.length; i++){
+		var d = this.checklist[i];
+		var t = new Topic({
+			Id: d.id,
+			Title: d.name,
+			Type: '3',
+			StartDate: d.start,
+			EndDate: d.end
+		}, this);
+
+		t.type = 'checklist tool';
+		t.raw = d;
+		t.path = '';
+		this.items.push(t);
+	}
+
+	for (var i = 0; i < this.dropboxes.length; i++){
+		var d = this.dropboxes[i];
+		var t = new Topic({
+			Id: d.Id,
+			Title: d.Name,
+			Type: '3',
+			StartDate: d.Availability ? d.Availability.StartDate : undefined,
+			EndDate: d.Availability ? d.Availability.EndDate : undefined,
+			DueDate: d.DueDate
+		}, this);
+
+		t.type = 'dropbox tool';
+		t.raw = d;
+		t.path = '';
+		this.items.push(t);
+	}
+}
+
 /**
  * @name Topics.getAll 
  * @description Takes an array of modules to be parsed and returns an array with all the modules (no modules within modules) and the topics
@@ -1370,9 +1476,13 @@ Topics.getAll = function(callback){
 	var _this = this;
 	var topics = new Topics();
 	topics.loading.start();
+	topics.loading.setText('Getting Checklists');
 	valence.checklist.getAll(function(checklist){
+		topics.loading.setText('Getting Dropboxes');
 		valence.dropbox.getFolder(function(a, b){
+			topics.loading.setText('Getting Quizzes');
 			valence.quiz.getAll(function(quizzes){
+				topics.loading.setText('Getting Surveys');
 				valence.survey.getAll(function(surveys){
 
 					function getTheRest(discussions){
@@ -1383,6 +1493,7 @@ Topics.getAll = function(callback){
 							topics.surveys = surveys;
 							topics.discussions = discussions;
 							topics.checklist = checklist;
+							topics.setToolItems();
 							topics.done = callback;
 							// Loop through each module
 							for (var i = 0; i < toc.Modules.length; i++){
@@ -1402,12 +1513,24 @@ Topics.getAll = function(callback){
 						});
 					}
 
+					topics.loading.setText('Getting Discussions');
 					valence.discussion.getForums(function(p, forums){
 						if (forums.length > 0){
 							var total = forums.length;
 							var spot = 0;
 							var result = [];
 							for (var i = 0; i < forums.length; i++){
+								result.push({
+									id: forums[i].ForumId,
+									start: forums[i].StartDate,
+									end: forums[i].EndDate,
+									post: {
+										start: forums[i].PostStartDate,
+										end: forums[i].PostEndDate
+									},
+									name: forums[i].Name,
+									type: 'forum'
+								})
 								valence.discussion.getTopics(forums[i].ForumId, function(p, forumTopics){
 									if (forumTopics.length > 0){
 										var r = [];
@@ -1420,7 +1543,8 @@ Topics.getAll = function(callback){
 													start: forumTopics[j].UnlockStartDate,
 													end: forumTopics[j].UnlockEndDate
 												},
-												name: forumTopics[j].Name
+												name: forumTopics[j].Name,
+												type: 'forumTopic'
 											})
 										}
 										result = result.concat(r);
@@ -1603,6 +1727,7 @@ Topics.prototype.render = function(){
 	});
 
 	this.table.draw();
+	$('.checkbox.disabled').checkbox();
 }
 /**
  * @end

@@ -27,38 +27,40 @@ function Topic(obj, topics){
     }
   })(this.obj);
 
+  this.isContentPage = true;
+
   if (this.type == undefined) this.type = 'module';
 
   this._id = (this.obj.Id ? this.obj.Id : this.obj.TopicId);
 
-  if (this.type == 'dropbox'){
-    var dropbox = topics.getDropboxByName(this.title);
-    if (dropbox.Availability && dropbox.Availability.StartDate) this.start = dropbox.Availability.StartDate;
-    if (dropbox.Availability && dropbox.Availability.EndDate) this.end = dropbox.Availability.EndDate;
-    this._dropboxId = dropbox.Id;
-  }
-  else if (this.type == 'quiz'){
-    var quiz = topics.getQuizByName(this.title);
-    this._quizId = quiz.id;
-    this.start = quiz.start;
-    this.end = quiz.end;
-  }
-  else if (this.type == 'survey'){
-    var survey = topics.getSurveyByName(this.title);
-    this._surveyId = survey.id;
-    this.start = survey.start;
-    this.end = survey.end;
-  }
-  else if (this.type == 'discuss'){
-    var discuss = topics.getDiscussionByName(this.title);
-    this._discussId = discuss.id;
-    this.start = discuss.start;
-    this.end = discuss.end;
-  }
-  else if (this.type == 'checklist'){
-    var check = topics.getChecklistByName(this.title);
-    this._checklistId = check.id;
-  }
+  // if (this.type == 'dropbox'){
+  //   var dropbox = topics.getDropboxByName(this.title);
+  //   if (dropbox.Availability && dropbox.Availability.StartDate) this.start = dropbox.Availability.StartDate;
+  //   if (dropbox.Availability && dropbox.Availability.EndDate) this.end = dropbox.Availability.EndDate;
+  //   this._dropboxId = dropbox.Id;
+  // }
+  // else if (this.type == 'quiz'){
+  //   var quiz = topics.getQuizByName(this.title);
+  //   this._quizId = quiz.id;
+  //   this.start = quiz.start;
+  //   this.end = quiz.end;
+  // }
+  // else if (this.type == 'survey'){
+  //   var survey = topics.getSurveyByName(this.title);
+  //   this._surveyId = survey.id;
+  //   this.start = survey.start;
+  //   this.end = survey.end;
+  // }
+  // else if (this.type == 'discuss'){
+  //   var discuss = topics.getDiscussionByName(this.title);
+  //   this._discussId = discuss.id;
+  //   this.start = discuss.start;
+  //   this.end = discuss.end;
+  // }
+  // else if (this.type == 'checklist'){
+  //   var check = topics.getChecklistByName(this.title);
+  //   this._checklistId = check.id;
+  // }
 
   /**
    * Dateify the objects
@@ -89,6 +91,19 @@ Topic.prototype.setOffset = function(amount, type){
     this[type] = new Date(this[type].setDate(this[type].getDate() + amount));
   }
   this.post = true;
+}
+
+Topic.prototype.isEditable = function(){
+  return this.type.indexOf(' tool') == -1;
+}
+
+Topic.prototype.setEditable = function(){
+  var isEditable = this.isEditable();
+  if (!isEditable) {
+    $(this.ele).find('.checkbox').addClass('disabled');
+    $(this.ele).css('background-color', 'rgba(12, 15, 41, 0.59)');
+    $(this.ele).addClass('nyi');
+  }
 }
 
 /**
@@ -332,25 +347,26 @@ Topic.prototype.save = function(afterSaveCallback){
    */
   function createCallUrl(obj, topic){
     var type = getUrlType(topic);
+    if (type.indexOf(' tool')) type = type.replace(' tool', '');
     var url = '';
     if (topic.isModule){
       url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/module/' + topic._id + '/EditModuleRestrictions'
     } 
-    else if (topic.type == 'dropbox'){
-      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._dropboxId + '/UpdateRestrictions?topicId=' + topic._id;
-    }
-    else if (topic.type == 'quiz'){
-      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._quizId + '/UpdateRestrictions?topicId=' + topic._id;
-    }
-    else if (topic.type == 'survey'){
-      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._surveyId + '/UpdateRestrictions?topicId=' + topic._id;
-    }
-    else if (topic.type == 'discuss'){
-      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._discussId + '/UpdateRestrictions?topicId=' + topic._id; 
-    }
-    else if (topic.type == 'checklist'){
-      url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._checklistId + '/UpdateRestrictions?topicId=' + topic._id; 
-    }
+    // else if (topic.type == 'dropbox tool'){
+    //   url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._dropboxId + '/UpdateRestrictions?topicId=' + topic._id;
+    // }
+    // else if (topic.type == 'quiz tool'){
+    //   url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._quizId + '/UpdateRestrictions?topicId=' + topic._id;
+    // }
+    // else if (topic.type == 'survey tool'){
+    //   url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._surveyId + '/UpdateRestrictions?topicId=' + topic._id;
+    // }
+    // else if (topic.type == 'discuss tool'){
+    //   url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._discussId + '/UpdateRestrictions?topicId=' + topic._id; 
+    // }
+    // else if (topic.type == 'checklist tool'){
+    //   url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._checklistId + '/UpdateRestrictions?topicId=' + topic._id; 
+    // }
     else {
       url = 'https://byui.brightspace.com/d2l/le/content/' + valence.courses.getId() + '/updateresource/' + type + '/' + topic._id + '/UpdateRestrictions?topicId=' + topic._id;
     }

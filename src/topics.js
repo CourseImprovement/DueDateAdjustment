@@ -136,6 +136,91 @@ Topics.prototype.devStart = function(){
 	}
 }
 
+/** 
+ * @name  Topics.setToolItems
+ */
+Topics.prototype.setToolItems = function(){
+	for (var i = 0; i < this.discussions.length; i++){
+		var d = this.discussions[i];
+		var t = new Topic({
+			Id: d.id,
+			Title: d.name,
+			Type: '3',
+			StartDate: d.start,
+			EndDate: d.end
+		}, this);
+
+		t.type = 'discuss tool';
+		t.raw = d;
+		t.path = '';
+		this.items.push(t);
+	}
+	for (var i = 0; i < this.quizzes.length; i++){
+		var d = this.quizzes[i];
+		var t = new Topic({
+			Id: d.id,
+			Title: d.name,
+			Type: '3',
+			StartDate: d.start,
+			EndDate: d.end
+		}, this);
+
+		t.type = 'quiz tool';
+		t.raw = d;
+		t.path = '';
+		this.items.push(t);
+	}
+
+	for (var i = 0; i < this.surveys.length; i++){
+		var d = this.surveys[i];
+		var t = new Topic({
+			Id: d.id,
+			Title: d.name,
+			Type: '3',
+			StartDate: d.start,
+			EndDate: d.end
+		}, this);
+
+		t.type = 'survey tool';
+		t.raw = d;
+		t.path = '';
+		this.items.push(t);
+	}
+
+	for (var i = 0; i < this.checklist.length; i++){
+		var d = this.checklist[i];
+		var t = new Topic({
+			Id: d.id,
+			Title: d.name,
+			Type: '3',
+			StartDate: d.start,
+			EndDate: d.end
+		}, this);
+
+		t.type = 'checklist tool';
+		t.raw = d;
+		t.path = '';
+		this.items.push(t);
+	}
+
+	for (var i = 0; i < this.dropboxes.length; i++){
+		var d = this.dropboxes[i];
+		var t = new Topic({
+			Id: d.Id,
+			Title: d.Name,
+			Type: '3',
+			StartDate: d.Availability ? d.Availability.StartDate : undefined,
+			EndDate: d.Availability ? d.Availability.EndDate : undefined,
+			DueDate: d.DueDate
+		}, this);
+
+		t.type = 'dropbox tool';
+		t.raw = d;
+		t.path = '';
+		this.items.push(t);
+	}
+}
+
 /**
  * @name Topics.getAll 
  * @description Takes an array of modules to be parsed and returns an array with all the modules (no modules within modules) and the topics
@@ -151,9 +236,13 @@ Topics.getAll = function(callback){
 	var _this = this;
 	var topics = new Topics();
 	topics.loading.start();
+	topics.loading.setText('Getting Checklists');
 	valence.checklist.getAll(function(checklist){
+		topics.loading.setText('Getting Dropboxes');
 		valence.dropbox.getFolder(function(a, b){
+			topics.loading.setText('Getting Quizzes');
 			valence.quiz.getAll(function(quizzes){
+				topics.loading.setText('Getting Surveys');
 				valence.survey.getAll(function(surveys){
 
 					function getTheRest(discussions){
@@ -164,6 +253,7 @@ Topics.getAll = function(callback){
 							topics.surveys = surveys;
 							topics.discussions = discussions;
 							topics.checklist = checklist;
+							topics.setToolItems();
 							topics.done = callback;
 							// Loop through each module
 							for (var i = 0; i < toc.Modules.length; i++){
@@ -183,12 +273,24 @@ Topics.getAll = function(callback){
 						});
 					}
 
+					topics.loading.setText('Getting Discussions');
 					valence.discussion.getForums(function(p, forums){
 						if (forums.length > 0){
 							var total = forums.length;
 							var spot = 0;
 							var result = [];
 							for (var i = 0; i < forums.length; i++){
+								result.push({
+									id: forums[i].ForumId,
+									start: forums[i].StartDate,
+									end: forums[i].EndDate,
+									post: {
+										start: forums[i].PostStartDate,
+										end: forums[i].PostEndDate
+									},
+									name: forums[i].Name,
+									type: 'forum'
+								})
 								valence.discussion.getTopics(forums[i].ForumId, function(p, forumTopics){
 									if (forumTopics.length > 0){
 										var r = [];
@@ -201,7 +303,8 @@ Topics.getAll = function(callback){
 													start: forumTopics[j].UnlockStartDate,
 													end: forumTopics[j].UnlockEndDate
 												},
-												name: forumTopics[j].Name
+												name: forumTopics[j].Name,
+												type: 'forumTopic'
 											})
 										}
 										result = result.concat(r);
@@ -384,6 +487,7 @@ Topics.prototype.render = function(){
 	});
 
 	this.table.draw();
+	$('.checkbox.disabled').checkbox();
 }
 /**
  * @end
